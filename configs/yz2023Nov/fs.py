@@ -398,7 +398,6 @@ elif len(bm) == 1 and args.dist:
         args.etherdump,
     )
 elif len(bm) == 1:
-    print("yzzz print we are using  root = Root(full_system=True, system=test_sys) \n")
     root = Root(full_system=True, system=test_sys)
 else:
     print("Error I don't know how to create more than 2 systems.")

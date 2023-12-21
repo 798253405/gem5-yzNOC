@@ -45,11 +45,13 @@ if error:
     print("Failed to run cmake")
     exit(-1)
 
+print("yzzzz cmake done ")
 error = call(["make"])
+print("yzzzz make finish but may fail or succeed ")
 if error:
     print("Failed to run make")
     exit(-1)
-
+print("yzzzz make done ")
 print("Compiled dsent")
 os.chdir("../../../")
 sys.path.append("build/ext/dsent")

@@ -69,6 +69,8 @@
 #include "mem/ruby/protocol/MessageSizeType.hh"
 #include "params/RubyNetwork.hh"
 #include "sim/clocked_object.hh"
+//yzzzzzzzzzz added
+#include "base/statistics.hh"
 
 namespace gem5
 {
@@ -163,7 +165,20 @@ class Network : public ClockedObject
     std::vector<std::vector<MessageBuffer*> > m_toNetQueues;
     std::vector<std::vector<MessageBuffer*> > m_fromNetQueues;
     std::vector<bool> m_ordered;
-
+    
+    
+    /*
+    //yzzzzzzzzzzzzzz
+ struct StatGroup : statistics::Group
+        {
+            StatGroup(statistics::Group *parent); // constructor
+            statistics::Histogram histogram;
+            statistics::Scalar scalar;
+            statistics::Formula formula;
+        } stats;
+      */  
+        
+        
   private:
     // Global address map
     struct AddrMapNode

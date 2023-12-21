@@ -85,32 +85,11 @@ def build_test_system(np):
     isa = get_runtime_isa()
     if isa == ISA.MIPS:
         test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0], cmdline=cmdline)
-    elif isa == ISA.SPARC:
-        test_sys = makeSparcSystem(test_mem_mode, bm[0], cmdline=cmdline)
-    elif isa == ISA.RISCV:
-        test_sys = makeBareMetalRiscvSystem(
-            test_mem_mode, bm[0], cmdline=cmdline
-        )
+   
     elif isa == ISA.X86:
         test_sys = makeLinuxX86System(
             test_mem_mode, np, bm[0], args.ruby, cmdline=cmdline
         )
-    elif isa == ISA.ARM:
-        test_sys = makeArmSystem(
-            test_mem_mode,
-            args.machine_type,
-            np,
-            bm[0],
-            args.dtb_filename,
-            bare_metal=args.bare_metal,
-            cmdline=cmdline,
-            external_memory=args.external_memory_system,
-            ruby=args.ruby,
-            vio_9p=args.vio_9p,
-            bootloader=args.bootloader,
-        )
-        if args.enable_context_switch_stats_dump:
-            test_sys.enable_context_switch_stats_dump = True
     else:
         fatal("Incapable of building %s full system!", isa.name)
 
@@ -136,6 +115,7 @@ def build_test_system(np):
     if buildEnv["USE_RISCV_ISA"]:
         test_sys.workload.bootloader = args.kernel
     elif args.kernel is not None:
+        print(f" yzzzz line 118 test_sys.workload.object_file = binary(args.kernel) ")
         test_sys.workload.object_file = binary(args.kernel)
 
     if args.script is not None:
@@ -175,62 +155,7 @@ def build_test_system(np):
             test_sys.ruby._cpu_ports[i].connectCpuPorts(cpu)
 
     else:
-        if args.caches or args.l2cache:
-            # By default the IOCache runs at the system clock
-            test_sys.iocache = IOCache(addr_ranges=test_sys.mem_ranges)
-            test_sys.iocache.cpu_side = test_sys.iobus.mem_side_ports
-            test_sys.iocache.mem_side = test_sys.membus.cpu_side_ports
-        elif not args.external_memory_system:
-            test_sys.iobridge = Bridge(
-                delay="50ns", ranges=test_sys.mem_ranges
-            )
-            test_sys.iobridge.cpu_side_port = test_sys.iobus.mem_side_ports
-            test_sys.iobridge.mem_side_port = test_sys.membus.cpu_side_ports
-
-        # Sanity check
-        if args.simpoint_profile:
-            if not ObjectList.is_noncaching_cpu(TestCPUClass):
-                fatal("SimPoint generation should be done with atomic cpu")
-            if np > 1:
-                fatal(
-                    "SimPoint generation not supported with more than one CPUs"
-                )
-
-        for i in range(np):
-            if args.simpoint_profile:
-                test_sys.cpu[i].addSimPointProbe(args.simpoint_interval)
-            if args.checker:
-                test_sys.cpu[i].addCheckerCpu()
-            if not ObjectList.is_kvm_cpu(TestCPUClass):
-                if args.bp_type:
-                    bpClass = ObjectList.bp_list.get(args.bp_type)
-                    test_sys.cpu[i].branchPred = bpClass()
-                if args.indirect_bp_type:
-                    IndirectBPClass = ObjectList.indirect_bp_list.get(
-                        args.indirect_bp_type
-                    )
-                    test_sys.cpu[
-                        i
-                    ].branchPred.indirectBranchPred = IndirectBPClass()
-            test_sys.cpu[i].createThreads()
-
-        # If elastic tracing is enabled when not restoring from checkpoint and
-        # when not fast forwarding using the atomic cpu, then check that the
-        # TestCPUClass is DerivO3CPU or inherits from DerivO3CPU. If the check
-        # passes then attach the elastic trace probe.
-        # If restoring from checkpoint or fast forwarding, the code that does this for
-        # FutureCPUClass is in the Simulation module. If the check passes then the
-        # elastic trace probe is attached to the switch CPUs.
-        if (
-            args.elastic_trace_en
-            and args.checkpoint_restore == None
-            and not args.fast_forward
-        ):
-            CpuConfig.config_etrace(TestCPUClass, test_sys.cpu, args)
-
-        CacheConfig.config_cache(args, test_sys)
-
-        MemConfig.config_mem(args, test_sys)
+         print(" line 157 should not happen")
 
     if ObjectList.is_kvm_cpu(TestCPUClass) or ObjectList.is_kvm_cpu(
         FutureClass
@@ -249,76 +174,7 @@ def build_test_system(np):
 
     return test_sys
 
-
-def build_drive_system(np):
-    # driver system CPU is always simple, so is the memory
-    # Note this is an assignment of a class, not an instance.
-    DriveCPUClass = AtomicSimpleCPU
-    drive_mem_mode = "atomic"
-    DriveMemClass = SimpleMemory
-
-    cmdline = cmd_line_template()
-    if buildEnv["USE_MIPS_ISA"]:
-        drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1], cmdline=cmdline)
-    elif buildEnv["USE_SPARC_ISA"]:
-        drive_sys = makeSparcSystem(drive_mem_mode, bm[1], cmdline=cmdline)
-    elif buildEnv["USE_X86_ISA"]:
-        drive_sys = makeLinuxX86System(
-            drive_mem_mode, np, bm[1], cmdline=cmdline
-        )
-    elif buildEnv["USE_ARM_ISA"]:
-        drive_sys = makeArmSystem(
-            drive_mem_mode,
-            args.machine_type,
-            np,
-            bm[1],
-            args.dtb_filename,
-            cmdline=cmdline,
-        )
-
-    # Create a top-level voltage domain
-    drive_sys.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
-
-    # Create a source clock for the system and set the clock period
-    drive_sys.clk_domain = SrcClockDomain(
-        clock=args.sys_clock, voltage_domain=drive_sys.voltage_domain
-    )
-
-    # Create a CPU voltage domain
-    drive_sys.cpu_voltage_domain = VoltageDomain()
-
-    # Create a source clock for the CPUs and set the clock period
-    drive_sys.cpu_clk_domain = SrcClockDomain(
-        clock=args.cpu_clock, voltage_domain=drive_sys.cpu_voltage_domain
-    )
-
-    drive_sys.cpu = DriveCPUClass(
-        clk_domain=drive_sys.cpu_clk_domain, cpu_id=0
-    )
-    drive_sys.cpu.createThreads()
-    drive_sys.cpu.createInterruptController()
-    drive_sys.cpu.connectBus(drive_sys.membus)
-    if args.kernel is not None:
-        drive_sys.workload.object_file = binary(args.kernel)
-
-    if ObjectList.is_kvm_cpu(DriveCPUClass):
-        drive_sys.kvm_vm = KvmVM()
-
-    drive_sys.iobridge = Bridge(delay="50ns", ranges=drive_sys.mem_ranges)
-    drive_sys.iobridge.cpu_side_port = drive_sys.iobus.mem_side_ports
-    drive_sys.iobridge.mem_side_port = drive_sys.membus.cpu_side_ports
-
-    # Create the appropriate memory controllers and connect them to the
-    # memory bus
-    drive_sys.mem_ctrls = [
-        DriveMemClass(range=r) for r in drive_sys.mem_ranges
-    ]
-    for i in range(len(drive_sys.mem_ctrls)):
-        drive_sys.mem_ctrls[i].port = drive_sys.membus.mem_side_ports
-
-    drive_sys.init_param = args.init_param
-
-    return drive_sys
+ 
 
 
 warn(
@@ -343,29 +199,14 @@ args = parser.parse_args()
 # Match the memories with the CPUs, based on the options for the test system
 TestMemClass = Simulation.setMemClass(args)
 
-if args.benchmark:
-    try:
-        bm = Benchmarks[args.benchmark]
-    except KeyError:
+if args.benchmark:   
+        print(f" yzzzz 203 args.benchmark should not happen")
         print(f"Error benchmark {args.benchmark} has not been defined.")
         print(f"Valid benchmarks are: {DefinedBenchmarks}")
-        sys.exit(1)
+
 else:
     if args.dual:
-        bm = [
-            SysConfig(
-                disks=args.disk_image,
-                rootdev=args.root_device,
-                mem=args.mem_size,
-                os_type=args.os_type,
-            ),
-            SysConfig(
-                disks=args.disk_image,
-                rootdev=args.root_device,
-                mem=args.mem_size,
-                os_type=args.os_type,
-            ),
-        ]
+        print(f" yzzzz 209 args.dualshould not happen")         
     else:
         bm = [
             SysConfig(
@@ -375,30 +216,18 @@ else:
                 os_type=args.os_type,
             )
         ]
-
+        print(f" yzzz line 219 bm[0] is", bm[0])    
 np = args.num_cpus
 
 test_sys = build_test_system(np)
 
 if len(bm) == 2:
-    drive_sys = build_drive_system(np)
-    root = makeDualRoot(True, test_sys, drive_sys, args.etherdump)
+    print(f" yzzzz  225 len(bm) == 2 should not happen")    
 elif len(bm) == 1 and args.dist:
     # This system is part of a dist-gem5 simulation
-    root = makeDistRoot(
-        test_sys,
-        args.dist_rank,
-        args.dist_size,
-        args.dist_server_name,
-        args.dist_server_port,
-        args.dist_sync_repeat,
-        args.dist_sync_start,
-        args.ethernet_linkspeed,
-        args.ethernet_linkdelay,
-        args.etherdump,
-    )
+    print(f" yzzzz 228 len(bm) == 1 and args.dist  should not happen")   
 elif len(bm) == 1:
-    print("yzzz print we are using  root = Root(full_system=True, system=test_sys) \n")
+    print("yzzz 230 print we are using  root = Root(full_system=True, system=test_sys) \n")
     root = Root(full_system=True, system=test_sys)
 else:
     print("Error I don't know how to create more than 2 systems.")
@@ -415,28 +244,7 @@ if args.timesync:
 
 if args.frame_capture:
     VncServer.frame_capture = True
-
-if buildEnv["USE_ARM_ISA"] and not args.bare_metal and not args.dtb_filename:
-    if args.machine_type not in [
-        "VExpress_GEM5",
-        "VExpress_GEM5_V1",
-        "VExpress_GEM5_V2",
-        "VExpress_GEM5_Foundation",
-    ]:
-        warn(
-            "Can only correctly generate a dtb for VExpress_GEM5_* "
-            "platforms, unless custom hardware models have been equipped "
-            "with generation functionality."
-        )
-
-    # Generate a Device Tree
-    for sysname in ("system", "testsys", "drivesys"):
-        if hasattr(root, sysname):
-            sys = getattr(root, sysname)
-            sys.workload.dtb_filename = os.path.join(
-                m5.options.outdir, f"{sysname}.dtb"
-            )
-            sys.generateDtb(sys.workload.dtb_filename)
+ 
 
 if args.wait_gdb:
     test_sys.workload.wait_for_remote_gdb = True

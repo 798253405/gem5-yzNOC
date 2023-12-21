@@ -216,6 +216,25 @@ Network::setToNetQueue(NodeID global_id, bool ordered, int network_num,
         m_toNetQueues[local_id].push_back(nullptr);
     }
     m_toNetQueues[local_id][network_num] = b;
+    
+    /*
+    //yzzzzzzzzz debug check whether it is working
+// Defining the declared constructor
+    Network::StatGroup::StatGroup(statistics::Group *parent)
+      : statistics::Group(parent),                           // initilizing the base class
+        ADD_STAT(histogram, "A useful histogram"),
+        scalar(this, "scalar", "A number"),             // this is the same as ADD_STAT(scalar, "A number")
+        ADD_STAT(formula, "A formula", scalar1/scalar2)
+    {
+        histogram
+          .init(num_bins);
+        scalar
+          .init(0)
+          .flags(condition ? 1 : 0);
+    }
+    
+    */
+ 
 }
 
 void
