@@ -26,3 +26,5 @@ src/mem/slicc/parser.out
 configs/.idea/
 
 yzzzni_tick_log.txt
+
+wait_until_python.txt

@@ -69,26 +69,71 @@ NetworkInterface::NetworkInterface(const Params &p)
     schedule(m_yztick_event, nextCycle()); // 首次调度事件
 }
 //yzkth
-void
-NetworkInterface::yzperTickFunction()
+int totalWrittenNIs = 0; // 记录已经写入的 NI 数量
+int pythonReadTick = 0;
+int pythonValue = 0;
+
+void NetworkInterface::yzperTickFunction()
 {
-    // 在这里添加你希望每个 tick 执行的代码
-     // 2. 创建/打开文件（在函数内部）
-    std::ofstream outfile;
-    outfile.open("yzzzni_tick_log.txt", std::ios::app); // 追加模式打开
+    // 1. 打开文件，写入当前 NI 的 Tick
+     // 不管是不是第16个ni，都要执行下一次,重新调度下一次事件
+     schedule(m_yztick_event, clockEdge(Cycles(100)));
+    std::ofstream outfile("yzzzni_tick_log.txt", std::ios::app);
     if (outfile.is_open()) {
-        // 3. 写入数据
-        outfile<< "NI ID: " << m_id << ", Cycle: " << curCycle() << ", Tick: " << curTick() << std::endl;
-        // 4. 关闭文件
+        outfile  << "NI ID: " << m_id << ", Cycle: " << curCycle() << ", Tick: "<< curTick() << std::endl;
         outfile.close();
     } else {
-        // 可选：处理文件打开失败的情况
-        warn("NetworkInterface::yzperTickFunction(): Could not open ni_tick_log.txt\n");
+        warn("NetworkInterface::yzperTickFunction(): Could not open yzzzni_tick_log.txt\n");
     }
 
-    //schedule(m_yztick_event, nextCycle()); // 重新调度事件，形成循环
-    schedule(m_yztick_event, clockEdge(Cycles(100))); // every 100 ni cycles
+    // 更新已写入的 NI 数量
+    totalWrittenNIs++;
+
+    // 如果未达到 16 个 NI，直接返回
+    if (totalWrittenNIs < 16) {
+        return;
+    }
+    else if (totalWrittenNIs == 16) {
+        totalWrittenNIs = 0;  // 重新开始计数
+    }
+
+   
+    //如果是第16个ni，那就卡死gem5,等待python更新文件
+    // 2. 读取 wait_until_python.txt 文件
+ 
+
+    std::ifstream infile("wait_until_python.txt");
+    if (infile.is_open()) {
+        infile >> pythonReadTick >> pythonValue;
+        infile.close();
+    } else {
+        warn("Could not open wait_until_python.txt. Proceeding without waiting.\n");
+    }
+
+    // 3. 等待 Python 更新 Tick
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));  // 10ms 休眠，减少 CPU 占用
+
+        // 读取最新的 Tick 和 Value
+        
+        std::ifstream infile_new("wait_until_python.txt");
+        if (infile_new.is_open()) {
+            infile_new >> pythonReadTick >>pythonValue;
+            infile_new.close();
+
+            // 如果 Tick 发生变化
+            if (pythonReadTick > curTick()) {// 说明 Python 已经更新了文件
+
+            
+                break;
+            }
+        }
+
+        
+    }
 }
+
+
 void
 NetworkInterface::addInPort(NetworkLink *in_link,
                               CreditLink *credit_link)

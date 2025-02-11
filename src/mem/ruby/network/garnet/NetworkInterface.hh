@@ -49,6 +49,9 @@
 
 //yzkth
 #include "sim/eventq.hh" // 包含 Event 相关头文件
+#include <filesystem>   // C++17 std::filesystem
+#include <thread>       // std::this_thread
+
 
 #include "debug/yzzzzNI.hh"
 #define yz250203LeakyBucketOn 
