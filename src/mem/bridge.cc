@@ -145,7 +145,7 @@ Bridge::BridgeRequestPort::recvTimingResp(PacketPtr pkt)
 
 bool
 Bridge::BridgeResponsePort::recvTimingReq(PacketPtr pkt)
-{
+{std::cout<<"debugyzzzwhichrecvTimingReq?lsrc/mem/bridge.cc"<<std::endl;
     DPRINTF(Bridge, "recvTimingReq: %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 

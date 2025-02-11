@@ -40,6 +40,8 @@
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 
+ 
+ 
 namespace gem5
 {
 
@@ -142,7 +144,7 @@ class GarnetSyntheticTraffic : public ClockedObject
     void initTrafficType();
 
     void doRetry();
-
+    
     friend class MemCompleteEvent;
 };
 

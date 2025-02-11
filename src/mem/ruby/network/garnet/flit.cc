@@ -71,7 +71,14 @@ flit::flit(int packet_id, int id, int  vc, int vnet, RouteInfo route, int size,
         m_type = TAIL_;
     else
         m_type = BODY_;
+
+   //DPRINTF(yzzzzNI, "debugyzzzNI garnetflit.cc line75 m_type=%d  m_packet_id =%d packet_id=%d m_type=%u  id=%d src_ni=%d src_router=%d  destni=%d dest_router=%d \n ",
+  // m_type, packet_id,m_type,id,m_route.src_ni,m_route.src_router,m_route.dest_ni,m_route.dest_router );
 }
+//    int src_ni;    int src_router;    int dest_ni;   int dest_router;
+ 
+
+
 
 flit *
 flit::serialize(int ser_id, int parts, uint32_t bWidth)
@@ -85,6 +92,8 @@ flit::serialize(int ser_id, int parts, uint32_t bWidth)
 
     flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route,
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
+    DPRINTF(yzzzzNI, "debugyzzzNI garnetflit.cc line95  m_type=%d packet_id=%d   id=%d vc=%d vnet=%d src_ni=%d src_router=%d  destni=%d dest_router=%d \n ",
+           fl->m_type, m_packet_id, new_id,m_vc, m_vnet,m_route.src_ni,m_route.src_router,m_route.dest_ni,m_route.dest_router );
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
     return fl;
@@ -100,6 +109,8 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 
     flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route,
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
+    DPRINTF(yzzzzNI, "debugyzzzNI garnetflit.cc line112  packet_id=%d   id=%d vc=%d vnet=%d src_ni=%d src_router=%d  destni=%d dest_router=%d \n ",
+            m_packet_id, new_id,m_vc, m_vnet,m_route.src_ni,m_route.src_router,m_route.dest_ni,m_route.dest_router );
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
     return fl;
@@ -112,7 +123,7 @@ flit::print(std::ostream& out) const
     out << "[flit:: ";
     out << "PacketId=" << m_packet_id << " ";
     out << "Id=" << m_id << " ";
-    out << "Type=" << m_type << " ";
+    out << "Type(headbodytail)=" << m_type << " ";
     out << "Size=" << m_size << " ";
     out << "Vnet=" << m_vnet << " ";
     out << "VC=" << m_vc << " ";

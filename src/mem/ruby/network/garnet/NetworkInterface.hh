@@ -46,6 +46,12 @@
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "params/GarnetNetworkInterface.hh"
 
+
+//yzkth
+#include "sim/eventq.hh" // 包含 Event 相关头文件
+
+#include "debug/yzzzzNI.hh"
+#define yz250203LeakyBucketOn 
 namespace gem5
 {
 
@@ -65,6 +71,19 @@ class NetworkInterface : public ClockedObject, public Consumer
     typedef GarnetNetworkInterfaceParams Params;
     NetworkInterface(const Params &p);
     ~NetworkInterface() = default;
+    //yzkth
+    int yz_ADtokenGenerated = 0;
+    int yz_ADtokenUsed = 0;
+    int yz_ADtokenWasted = 0;
+    int yz_tokenInBucket = 0;
+    float yz_InjRate = 25.0/100.0;
+    EventFunctionWrapper m_yztick_event; // 添加事件成员
+    void yzperTickFunction();           // 添加 perTickFunction() 声明
+
+
+
+
+
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,
@@ -306,6 +325,8 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     InputPort *getInportForVnet(int vnet);
     OutputPort *getOutportForVnet(int vnet);
+
+     bool yzModifiedflitisizeMessage(MsgPtr msg_ptr, int vnet);
 };
 
 } // namespace garnet

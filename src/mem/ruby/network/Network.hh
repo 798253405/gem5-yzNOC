@@ -71,7 +71,7 @@
 #include "sim/clocked_object.hh"
 //yzzzzzzzzzz added
 #include "base/statistics.hh"
-
+#include "debug/yzzzzNI.hh"
 namespace gem5
 {
 

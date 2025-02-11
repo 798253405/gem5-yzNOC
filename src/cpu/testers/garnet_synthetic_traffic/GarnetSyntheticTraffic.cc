@@ -69,6 +69,7 @@ GarnetSyntheticTraffic::sendPkt(PacketPtr pkt)
     if (!cachePort.sendTimingReq(pkt)) {
         retryPkt = pkt; // RubyPort will retry sending
     }
+    //std::cout<<"coutdebugyzzzzzGarnetSyntheticTraffic::sendPkt "<<cachePort<<" "<<simCycles<<" "<<curTick()<< std::endl;
     numPacketsSent++;
 }
 
@@ -178,6 +179,7 @@ GarnetSyntheticTraffic::tick()
         if (!tickEvent.scheduled())
             schedule(tickEvent, clockEdge(Cycles(1)));
     }
+    
 }
 
 void

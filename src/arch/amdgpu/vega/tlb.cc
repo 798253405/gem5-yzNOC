@@ -658,7 +658,7 @@ GpuTLB::TLBEvent::getTLBEventVaddr()
  */
 bool
 GpuTLB::CpuSidePort::recvTimingReq(PacketPtr pkt)
-{
+{cout<<"debugyzzzwhichrecvTimingReq?amd/gpuvega/tlb.cc"<<endl;
     bool ret = false;
     [[maybe_unused]] Addr virt_page_addr = roundDown(pkt->req->getVaddr(),
                                                      VegaISA::PageBytes);

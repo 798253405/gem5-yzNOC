@@ -117,9 +117,40 @@ class GarnetNetwork : public Network
     void resetStats();
     void print(std::ostream& out) const;
 
+   
     // increment counters
     void increment_injected_packets(int vnet) { m_packets_injected[vnet]++; }
     void increment_received_packets(int vnet) { m_packets_received[vnet]++; }
+
+     //yzKTH
+    void increment_yzAllreceivedpackets(int vnet,Tick in_network_delay,Tick in_queueing_delay) 
+    { 
+    yzOneVNetState_cur[0] =   yzOneVNetState_cur[0] + 1; // yzOneVNetState_cur[0] is the packet number  
+    yzOneVNetState_cur[1] = yzOneVNetState_cur[1] ;//TBD, queueing delay ? length in queuingbuffer? in network?
+    yz_tempSumPacNetDelay = yz_tempSumPacNetDelay + in_network_delay;
+     yz_tempSumPacQueDelay = yz_tempSumPacQueDelay + in_queueing_delay;
+      yzOneVNetState_cur[2] =  yz_tempSumPacNetDelay /yzOneVNetState_cur[0];
+       yzOneVNetState_cur[3] =  yz_tempSumPacQueDelay  /yzOneVNetState_cur[0];
+       yzOneVNetState_cur[4] = 0; //tbd, link utilization .
+    
+    }
+    void yz_resetStateNewWindow(){
+        yzOneVNetState_pre[0] = yzOneVNetState_cur[0] ;
+        yz_tempSumPacQueDelay  = 0;
+        yz_tempSumPacNetDelay  = 0;
+        yzOneVNetState_cur[0] = 0;
+        yzOneVNetState_cur[1] = 0; 
+    }
+    void yz_increment_injected_packets(int vnet,int id) { 
+        if (vnet == 0)
+            yz_packets_injectedVnet0[id]++; 
+        else if (vnet == 1)
+         yz_packets_injectedVnet1[id]++; 
+        else if (vnet == 2)
+          yz_packets_injectedVnet2[id]++; 
+          else
+         assert("line131ni.hh error" && false);
+        }
 
     void
     increment_packet_network_latency(Tick latency, int vnet)
@@ -173,7 +204,14 @@ class GarnetNetwork : public Network
     statistics::Vector m_packets_injected;
     statistics::Vector m_packet_network_latency;
     statistics::Vector m_packet_queueing_latency;
-
+    statistics::Vector yz_packets_injectedVnet0;
+    statistics::Vector yz_packets_injectedVnet1;
+    statistics::Vector yz_packets_injectedVnet2;
+    float yzOneVNetState_pre[6] = {0};
+    float yzOneVNetState_cur[6] = {0};
+    float yz_tempSumPacNetDelay = 0;
+    float yz_tempSumPacQueDelay = 0;
+    
     statistics::Formula m_avg_packet_vnet_latency;
     statistics::Formula m_avg_packet_vqueue_latency;
     statistics::Formula m_avg_packet_network_latency;

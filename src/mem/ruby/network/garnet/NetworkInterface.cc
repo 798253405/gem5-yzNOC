@@ -56,12 +56,39 @@ NetworkInterface::NetworkInterface(const Params &p)
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(0),
     m_vc_allocator(m_virtual_networks, 0),
     m_deadlock_threshold(p.garnet_deadlock_threshold),
-    vc_busy_counter(m_virtual_networks, 0)
+    vc_busy_counter(m_virtual_networks, 0),
+    m_yztick_event([this]{ yzperTickFunction(); },  // 初始化事件
+                    name() + ".perTickEvent",
+                    false,
+                    Event::Progress_Event_Pri)
 {
     m_stall_count.resize(m_virtual_networks);
     niOutVcs.resize(0);
+    //yzkth
+    
+    schedule(m_yztick_event, nextCycle()); // 首次调度事件
 }
+//yzkth
+void
+NetworkInterface::yzperTickFunction()
+{
+    // 在这里添加你希望每个 tick 执行的代码
+     // 2. 创建/打开文件（在函数内部）
+    std::ofstream outfile;
+    outfile.open("yzzzni_tick_log.txt", std::ios::app); // 追加模式打开
+    if (outfile.is_open()) {
+        // 3. 写入数据
+        outfile<< "NI ID: " << m_id << ", Cycle: " << curCycle() << ", Tick: " << curTick() << std::endl;
+        // 4. 关闭文件
+        outfile.close();
+    } else {
+        // 可选：处理文件打开失败的情况
+        warn("NetworkInterface::yzperTickFunction(): Could not open ni_tick_log.txt\n");
+    }
 
+    //schedule(m_yztick_event, nextCycle()); // 重新调度事件，形成循环
+    schedule(m_yztick_event, clockEdge(Cycles(100))); // every 100 ni cycles
+}
 void
 NetworkInterface::addInPort(NetworkLink *in_link,
                               CreditLink *credit_link)
@@ -171,6 +198,10 @@ NetworkInterface::incrementStats(flit *t_flit)
         m_net_ptr->increment_received_packets(vnet);
         m_net_ptr->increment_packet_network_latency(network_delay, vnet);
         m_net_ptr->increment_packet_queueing_latency(queueing_delay, vnet);
+        m_net_ptr->increment_yzAllreceivedpackets(vnet,network_delay,queueing_delay);
+
+        //yzKTH
+        //yzOneNI_recordOnePacket();
     }
 
     // Hops
@@ -189,18 +220,19 @@ NetworkInterface::incrementStats(flit *t_flit)
 
 void
 NetworkInterface::wakeup()
-{
+{ 
+     
     std::ostringstream oss;
     for (auto &oPort: outPorts) {
         oss << oPort->routerID() << "[" << oPort->printVnets() << "] ";
     }
-    DPRINTF(RubyNetwork, "Network Interface %d connected to router:%s "
+    DPRINTF(RubyNetwork, "debugyzzzNI Network Interface %d connected to router:%s "
             "woke up. Period: %ld\n", m_id, oss.str(), clockPeriod());
-
+    //std::cout<<"coutdebugyzzzz "<<"NetworkInterface::wakeup() "<<m_id<<"  connected to router" <<oss.str() <<" clockPeriod()is "<<clockPeriod()<<" curTick()is "<<curTick()<<std::endl;
     assert(curTick() == clockEdge());
     MsgPtr msg_ptr;
     Tick curTime = clockEdge();
-
+ // std::cout<<" debugyzzznetworkinterface line203 "<<curTime<<" "<<curCycle()<<std::endl;
     // Checking for messages coming from the protocol
     // can pick up a message/cycle for each virtual net
     for (int vnet = 0; vnet < inNode_ptr.size(); ++vnet) {
@@ -211,7 +243,13 @@ NetworkInterface::wakeup()
 
         if (b->isReady(curTime)) { // Is there a message waiting
             msg_ptr = b->peekMsgPtr();
-            if (flitisizeMessage(msg_ptr, vnet)) {
+            //std::cout<<"coutdebugyzzzznetworkinterfaceline214"<<"NI::wakeup()_msg_ptr "<<msg_ptr.get()<<" curTick()is "<<curTick()<<std::endl;
+            #ifdef  yz250203LeakyBucketOn
+            if (yzModifiedflitisizeMessage(msg_ptr, vnet))
+            #else
+            if (flitisizeMessage(msg_ptr, vnet))
+            #endif 
+            {
                 b->dequeue(curTime);
             }
         }
@@ -245,7 +283,7 @@ NetworkInterface::wakeup()
                     // Space is available. Enqueue to protocol buffer.
                     outNode_ptr[vnet]->enqueue(t_flit->get_msg_ptr(), curTime,
                                                cyclesToTicks(Cycles(1)));
-
+                    DPRINTF(RubyNetwork, "debugyzzzzselfAdded Recieved tailflit:%s msg=%s\n", *t_flit, t_flit->get_msg_ptr());
                     // Simply send a credit back since we are not buffering
                     // this flit in the NI
                     Credit *cFlit = new Credit(t_flit->get_vc(),
@@ -447,6 +485,122 @@ NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
 
             fl->set_src_delay(curTick() - msg_ptr->getTime());
             niOutVcs[vc].insert(fl);
+        }
+
+        m_ni_out_vcs_enqueue_time[vc] = curTick();
+        outVcState[vc].setState(ACTIVE_, curTick());
+    }
+    return true ;
+}
+// Embed the protocol message into flits
+bool
+NetworkInterface::yzModifiedflitisizeMessage(MsgPtr msg_ptr, int vnet)
+{   
+     yz_InjRate =25.0/100;
+    yz_ADtokenGenerated = (curTick() ) /500*  yz_InjRate + 1;//yz assuming toke speed = 0.25 
+    if( yz_ADtokenGenerated >  (yz_ADtokenUsed+yz_ADtokenWasted)){ // if new token come
+         if( yz_tokenInBucket >= 20 ){   // assuming 20 is the max token number in bucket
+        yz_ADtokenWasted = yz_ADtokenWasted+1;//just drop this token.
+    }else{
+        yz_tokenInBucket = yz_tokenInBucket+1;
+    }
+    }
+   
+    
+    if(yz_tokenInBucket < 1){
+       return false;
+    }
+    else{
+       yz_ADtokenUsed = yz_ADtokenUsed+1;
+        yz_tokenInBucket = yz_tokenInBucket -1;
+    }   
+    
+
+    Message *net_msg_ptr = msg_ptr.get();
+    NetDest net_msg_dest = net_msg_ptr->getDestination();
+
+    // gets all the destinations associated with this message.
+    std::vector<NodeID> dest_nodes = net_msg_dest.getAllDest();
+
+    // Number of flits is dependent on the link bandwidth available.
+    // This is expressed in terms of bytes/cycle or the flit size
+    OutputPort *oPort = getOutportForVnet(vnet);
+    assert(oPort);
+    int num_flits = (int)divCeil((float) m_net_ptr->MessageSizeType_to_int(
+        net_msg_ptr->getMessageSize()), (float)oPort->bitWidth());
+
+    DPRINTF(RubyNetwork, "Message Size:%d vnet:%d bitWidth:%d\n",
+        m_net_ptr->MessageSizeType_to_int(net_msg_ptr->getMessageSize()),
+        vnet, oPort->bitWidth());
+
+    // loop to convert all multicast messages into unicast messages
+    for (int ctr = 0; ctr < dest_nodes.size(); ctr++) {
+
+        // this will return a free output virtual channel
+        int vc = calculateVC(vnet);
+
+        if (vc == -1) {
+            return false ;
+        }
+        MsgPtr new_msg_ptr = msg_ptr->clone();
+        NodeID destID = dest_nodes[ctr];
+
+        Message *new_net_msg_ptr = new_msg_ptr.get();
+        if (dest_nodes.size() > 1) {
+            NetDest personal_dest;
+            for (int m = 0; m < (int) MachineType_NUM; m++) {
+                if ((destID >= MachineType_base_number((MachineType) m)) &&
+                    destID < MachineType_base_number((MachineType) (m+1))) {
+                    // calculating the NetDest associated with this destID
+                    personal_dest.clear();
+                    personal_dest.add((MachineID) {(MachineType) m, (destID -
+                        MachineType_base_number((MachineType) m))});
+                    new_net_msg_ptr->getDestination() = personal_dest;
+                    break;
+                }
+            }
+            net_msg_dest.removeNetDest(personal_dest);
+            // removing the destination from the original message to reflect
+            // that a message with this particular destination has been
+            // flitisized and an output vc is acquired
+            net_msg_ptr->getDestination().removeNetDest(personal_dest);
+        }
+
+        // Embed Route into the flits
+        // NetDest format is used by the routing table
+        // Custom routing algorithms just need destID
+
+        RouteInfo route;
+        route.vnet = vnet;
+        route.net_dest = new_net_msg_ptr->getDestination();
+        route.src_ni = m_id;
+        route.src_router = oPort->routerID();
+        route.dest_ni = destID;
+        route.dest_router = m_net_ptr->get_router_id(destID, vnet);
+
+        // initialize hops_traversed to -1
+        // so that the first router increments it to 0
+        route.hops_traversed = -1;
+
+        m_net_ptr->increment_injected_packets(vnet);
+        m_net_ptr->yz_increment_injected_packets(vnet, m_id);// yz added //just record
+        m_net_ptr->update_traffic_distribution(route);
+        int packet_id = m_net_ptr->getNextPacketID();
+
+         yz_ADtokenUsed =  yz_ADtokenUsed+1;//=1 for every packet (not every flit)
+        for (int i = 0; i < num_flits; i++) {
+            m_net_ptr->increment_injected_flits(vnet);
+            flit *fl = new flit(packet_id,
+                i, vc, vnet, route, num_flits, new_msg_ptr,
+                m_net_ptr->MessageSizeType_to_int(
+                net_msg_ptr->getMessageSize()),
+                oPort->bitWidth(), curTick());
+
+            fl->set_src_delay(curTick() - msg_ptr->getTime());
+            niOutVcs[vc].insert(fl);
+            DPRINTF(yzzzzNI, "debugyzzzNI networkinterface.ccflitizemessage line452  packet_id=%d   id=%d vc=%d vnet=%d src_ni=%d src_router=%d dest_router=%d destni=%d  \n ",
+            packet_id, i,vc,vnet,route.src_ni,route.src_router,route.dest_router,route.dest_ni );
+
         }
 
         m_ni_out_vcs_enqueue_time[vc] = curTick();

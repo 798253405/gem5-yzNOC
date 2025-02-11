@@ -32,6 +32,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, argparse, sys
 
+ 
 addToPath("../")
 
 from common import Options
@@ -138,10 +139,11 @@ cpus = [
     )
     for i in range(args.num_cpus)
 ]
-
+for cpu in cpus:
+    print("pythondebugyzzzzcpus ", cpu.type, m5.curTick(),cpu.inj_rate,cpu.inj_vnet,cpu.num_dest,cpu.sim_cycles)
 # create the desired simulated system
 system = System(cpu=cpus, mem_ranges=[AddrRange(args.mem_size)])
-
+print("\npythondebugyzzzzsystem ",system.mem_mode   )
 
 # Create a top-level voltage domain and clock domain
 system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)

@@ -38,6 +38,10 @@
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
+#include "base/trace.hh"
+#include "debug/yzzzzNI.hh"
+
+
 namespace gem5
 {
 

@@ -53,6 +53,8 @@
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubySequencer.hh"
 
+
+#include "debug/yzzzzNI.hh"
 namespace gem5
 {
 

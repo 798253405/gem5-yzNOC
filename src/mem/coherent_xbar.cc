@@ -148,6 +148,7 @@ CoherentXBar::init()
 bool
 CoherentXBar::recvTimingReq(PacketPtr pkt, PortID cpu_side_port_id)
 {
+    std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/coherenxbar.cc"<<std::endl;
     // determine the source port based on the id
     ResponsePort *src_port = cpuSidePorts[cpu_side_port_id];
 

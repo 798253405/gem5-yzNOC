@@ -384,6 +384,7 @@ CommMonitor::recvAtomicSnoop(PacketPtr pkt)
 bool
 CommMonitor::recvTimingReq(PacketPtr pkt)
 {
+    std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/.commonitor.cc"<<std::endl;
     // should always see a request
     assert(pkt->isRequest());
 

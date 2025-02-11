@@ -49,6 +49,7 @@ bool
 TimingRequestProtocol::sendReq(TimingResponseProtocol *peer, PacketPtr pkt)
 {
     assert(pkt->isRequest());
+    //std::cout<<"coutdebugyzzzzTimingRequestProtocol::sendReq bool? line 52 "<<  &peer <<" "<<curTick()<<std::endl;
     return peer->recvTimingReq(pkt);
 }
 

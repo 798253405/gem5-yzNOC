@@ -118,6 +118,7 @@ SimpleMemory::recvMemBackdoorReq(const MemBackdoorReq &req,
 bool
 SimpleMemory::recvTimingReq(PacketPtr pkt)
 {
+    std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/simple_mem.cc"<<std::endl;
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
 

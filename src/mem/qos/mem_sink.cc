@@ -132,6 +132,7 @@ MemSinkCtrl::getPort(const std::string &interface, PortID idx)
 bool
 MemSinkCtrl::recvTimingReq(PacketPtr pkt)
 {
+    // std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/qos/memsink"<<std::endl;
     // Request accepted
     bool req_accepted = true;
 

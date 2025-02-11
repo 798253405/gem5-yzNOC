@@ -101,6 +101,7 @@ SimpleMemobj::CPUSidePort::recvFunctional(PacketPtr pkt)
 bool
 SimpleMemobj::CPUSidePort::recvTimingReq(PacketPtr pkt)
 {
+    std::cout<<"debugyzzzwhichrecvTimingReq?learinggem5part2/simplememobj.cc"<<std::endl;
     // Just forward to the memobj.
     if (!owner->handleRequest(pkt)) {
         needRetry = true;

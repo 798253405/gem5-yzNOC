@@ -1016,7 +1016,7 @@ namespace X86ISA
      */
     bool
     GpuTLB::CpuSidePort::recvTimingReq(PacketPtr pkt)
-    {
+    {   cout<<"debugyzzzwhichrecvTimingReq?amdgpucommontlb.cc"<<endl;
         if (tlb->outstandingReqs < tlb->maxCoalescedReqs) {
             tlb->issueTLBLookup(pkt);
             // update number of outstanding translation requests

@@ -163,6 +163,7 @@ SerialLink::SerialLinkRequestPort::recvTimingResp(PacketPtr pkt)
 bool
 SerialLink::SerialLinkResponsePort::recvTimingReq(PacketPtr pkt)
 {
+    std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/seriallink.cc"<<std::endl;
     DPRINTF(SerialLink, "recvTimingReq: %s addr 0x%x\n",
             pkt->cmdString(), pkt->getAddr());
 

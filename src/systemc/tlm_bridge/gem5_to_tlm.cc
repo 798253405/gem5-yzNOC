@@ -370,6 +370,7 @@ template <unsigned int BITWIDTH>
 bool
 Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
 {
+     std::cout<<"debugyzzzwhichrecvTimingReq?src/system/tlm_bridge/gem5totlm.cc"<<std::endl;
     panic_if(packet->cacheResponding(),
              "Should not see packets where cache is responding");
 

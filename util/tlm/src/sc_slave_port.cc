@@ -171,6 +171,7 @@ SCSlavePort::recvFunctionalSnoop(gem5::PacketPtr packet)
 bool
 SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
 {
+     std::cout<<"debugyzzzwhichrecvTimingReq?util/tlm/src/sc_slave_port.cc"<<std::endl;
     CAUGHT_UP;
 
     panic_if(packet->cacheResponding(), "Should not see packets where cache "
@@ -259,7 +260,7 @@ SCSlavePort::recvTimingReq(gem5::PacketPtr packet)
         sc_assert(phase == tlm::END_RESP);
         trans->release();
     }
-
+    //cout<<"sc_slave_port.ccdebugyzzzz this is therecvTimingReqGarnetStandaloneused "<<endl;
     return true;
 }
 

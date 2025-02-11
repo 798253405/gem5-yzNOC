@@ -53,6 +53,8 @@
 #include "params/RubyPort.hh"
 #include "sim/clocked_object.hh"
 
+
+#include "debug/yzzzzNI.hh"
 namespace gem5
 {
 

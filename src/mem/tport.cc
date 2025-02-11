@@ -62,6 +62,7 @@ SimpleTimingPort::recvFunctional(PacketPtr pkt)
 bool
 SimpleTimingPort::recvTimingReq(PacketPtr pkt)
 {
+   //  std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/tport.cc"<<std::endl;// this is also used in parsec
     // the SimpleTimingPort should not be used anywhere where there is
     // a need to deal with snoop responses and their flow control
     // requirements

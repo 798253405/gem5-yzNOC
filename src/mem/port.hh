@@ -589,6 +589,7 @@ RequestPort::sendTimingReq(PacketPtr pkt)
     try {
         addTrace(pkt);
         bool succ = TimingRequestProtocol::sendReq(_responsePort, pkt);
+       // std::cout<<"coutdebugyzzzzRequestPort::sendTimingReq "<< succ<<" "<<curTick()<<std::endl;
         if (!succ)
             removeTrace(pkt);
         return succ;

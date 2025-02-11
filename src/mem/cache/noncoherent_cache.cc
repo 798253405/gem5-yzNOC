@@ -134,6 +134,7 @@ NoncoherentCache::handleTimingReqMiss(PacketPtr pkt, CacheBlk *blk,
 void
 NoncoherentCache::recvTimingReq(PacketPtr pkt)
 {
+     //std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/cache/noncohere_cache.cc"<<std::endl;
     panic_if(pkt->cacheResponding(), "Should not see packets where cache "
              "is responding");
 

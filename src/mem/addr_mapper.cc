@@ -107,6 +107,7 @@ AddrMapper::recvAtomicSnoop(PacketPtr pkt)
 bool
 AddrMapper::recvTimingReq(PacketPtr pkt)
 {
+    std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/addrmapper.cc"<<std::endl;
     Addr orig_addr = pkt->getAddr();
     bool needsResponse = pkt->needsResponse();
     bool cacheResponding = pkt->cacheResponding();

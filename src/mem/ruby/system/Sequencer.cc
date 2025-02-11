@@ -61,6 +61,9 @@
 #include "mem/ruby/system/RubySystem.hh"
 #include "sim/system.hh"
 
+
+ #include "debug/yzzzzNI.hh"
+
 namespace gem5
 {
 
@@ -142,6 +145,7 @@ Sequencer::Sequencer(const Params &p)
             m_missTypeMachLatencyHist[i][j]->init(10);
         }
     }
+        DPRINTF(yzzzzNI, "debugyzzzsequencerNew line148 cpu-%u \n ", m_version);
 
 }
 
@@ -228,7 +232,7 @@ Sequencer::wakeup()
 
     // Check for deadlock of any of the requests
     Cycles current_time = curCycle();
-
+  DPRINTF(yzzzzNI, "debugyzzzsequencer line235 \n " );
     // Check across all outstanding requests
     [[maybe_unused]] int total_outstanding = 0;
 
@@ -247,11 +251,12 @@ Sequencer::wakeup()
         }
         total_outstanding += table_entry.second.size();
     }
-
+ 
     assert(m_outstanding_count == total_outstanding);
-
+    
     if (m_outstanding_count > 0) {
         // If there are still outstanding requests, keep checking
+ 
         schedule(deadlockCheckEvent, clockEdge(m_deadlock_threshold));
     }
 }
@@ -753,6 +758,7 @@ Sequencer::empty() const
 RequestStatus
 Sequencer::makeRequest(PacketPtr pkt)
 {
+    //std::cout<<"debugyzzzz Sequencer::makeRequest "<<std::endl;
     // HTM abort signals must be allowed to reach the Sequencer
     // the same cycle they are issued. They cannot be retried.
     if ((m_outstanding_count >= m_max_outstanding_requests) &&

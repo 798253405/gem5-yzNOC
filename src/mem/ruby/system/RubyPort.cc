@@ -212,7 +212,7 @@ bool RubyPort::MemRequestPort::recvTimingResp(PacketPtr pkt)
 bool
 RubyPort::PioResponsePort::recvTimingReq(PacketPtr pkt)
 {
-
+    //std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/ruby/system/rubyport.cc/pipresponseport"<<std::endl;//this is the printed version
     for (size_t i = 0; i < owner.request_ports.size(); ++i) {
         AddrRangeList l = owner.request_ports[i]->getAddrRanges();
         for (auto it = l.begin(); it != l.end(); ++it) {
@@ -250,7 +250,10 @@ RubyPort::PioResponsePort::recvAtomic(PacketPtr pkt)
 
 bool
 RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
-{
+{ 
+    //std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/ruby/system/rubyport.cc/memresponseport"<<std::endl;
+       DPRINTF(yzzzzNI, "Timing request for address %#x on port %d\n",
+            pkt->getAddr(), id );
     DPRINTF(RubyPort, "Timing request for address %#x on port %d\n",
             pkt->getAddr(), id);
 
@@ -264,6 +267,7 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
         warn_once("Cache maintenance operations are not supported in Ruby.\n");
         pkt->makeResponse();
         schedTimingResp(pkt, curTick());
+        //std::cout<<"debugyzzzthisReqIs pkt->req->isCacheMaintenance()"<<std::endl;
         return true;
     }
     // Check for pio requests and directly send them to the dedicated
@@ -282,6 +286,7 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
             RubySystem *rs = owner.m_ruby_system;
             owner.memRequestPort.schedTimingReq(pkt,
                 curTick() + rs->clockPeriod());
+            //std::cout<<"debugyzzzthisReqIs pkt->cmd != MemCmd::MemSyncReq"<<std::endl;
             return true;
         }
     }
@@ -299,6 +304,7 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
     if (requestStatus == RequestStatus_Issued) {
         DPRINTF(RubyPort, "Request %s 0x%x issued\n", pkt->cmdString(),
                 pkt->getAddr());
+        //std::cout<<"debugyzzzthisReqIs submit the ruby request"<<std::endl;
         return true;
     }
 

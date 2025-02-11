@@ -15,13 +15,15 @@ then
 else
 	# We've already executed once, so we should exit
 	echo "yzzzWe've already executed once, so we should exit"
-	sleep 2
+ 
 	/sbin/m5 exit
 fi
 
 
 # Checkpoint the first execution
 echo "yzzzz42Checkpointing simulation..."
+
+ 
 /sbin/m5 checkpoint
 echo "yzzzz44CheckpointingDone"
 
@@ -33,13 +35,13 @@ then
 	export RUNSCRIPT_VAR=2
 
 	# Read the script for the checkpoint restored execution
-	echo "yzzzzzz47oading old script..."
-	/sbin/m5 readfile > /tmp/runscript
-	cat /tmp/runscript 
+	#echo "yzzzzzz47oading old script..."
+	#/sbin/m5 readfile > /tmp/runscript
+	#cat /tmp/runscript 
 	echo "yzzzzzz54oading second new script..."
 	/sbin/m5 readfile > /tmp/runscript
 	cat /tmp/runscript
-	echo "yzzzzz59runing second new script..."
+	#echo "yzzzzz59runing second new script..."
 	chmod 755 /tmp/runscript
 	
 	# Execute the new runscript
@@ -54,8 +56,8 @@ then
 	fi
 
 fi
-sleep 1; 
+ 
 echo "yzzzzzz62Fell through script. Exiting..."
-sleep 3; 
-/sbin/m5 exit
+ 
+#/sbin/m5 exit
  

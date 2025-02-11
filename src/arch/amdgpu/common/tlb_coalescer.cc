@@ -231,6 +231,7 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 bool
 TLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
+    //cout<<"debugyzzzwhichrecvTimingReq?tlb_coalescer.cc"<<endl;
     // first packet of a coalesced request
     PacketPtr first_packet = nullptr;
     // true if we are able to do coalescing

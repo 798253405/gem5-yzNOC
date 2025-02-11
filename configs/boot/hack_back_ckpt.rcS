@@ -32,6 +32,7 @@ else
 fi
 
 # Checkpoint the first execution
+
 echo "Checkpointing simulation..."
 /sbin/m5 checkpoint
 

@@ -101,6 +101,8 @@ GarnetNetwork::GarnetNetwork(const Params &p)
         NetworkInterface *ni = safe_cast<NetworkInterface *>(*i);
         m_nis.push_back(ni);
         ni->init_net_ptr(this);
+        DPRINTF(yzzzzNI, "debugyzzzGarnetwork.cc line104 m_nis.size()=%d  p.netifs.size()=%d m_nodes =%d  m_routers=%d \n ",
+        m_nis.size(),p.netifs.size(), m_nodes, m_routers.size()  );
     }
 
     // Print Garnet version
@@ -111,9 +113,9 @@ void
 GarnetNetwork::init()
 {
     Network::init();
-
+    
     for (int i=0; i < m_nodes; i++) {
-        m_nis[i]->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
+        m_nis[i]->addNode(m_toNetQueues[i], m_fromNetQueues[i]);// m_toNetQueues[i]= in   m_fromNetQueues[i]= out
     }
 
     // The topology pointer should have already been initialized in the
@@ -220,6 +222,8 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     } else {
         m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
     }
+        DPRINTF(yzzzzNI, "debugyzzzGarnetwork.cc line120ini  global_src=%d  destswtich=%d  \n ",
+        global_src, dest );
 
 }
 
@@ -400,6 +404,27 @@ GarnetNetwork::regStats()
         .flags(statistics::pdf | statistics::total | statistics::nozero |
             statistics::oneline)
         ;
+
+    yz_packets_injectedVnet0
+        .init(m_nis.size())
+        .name(name() + ".yz_packets_injectedVnet0")
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
+        ;    
+
+    yz_packets_injectedVnet1
+        .init(m_nis.size())
+        .name(name() + ".yz_packets_injectedVnet1")
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
+        ;    
+
+    yz_packets_injectedVnet2
+        .init(m_nis.size())
+        .name(name() + ".yz_packets_injectedVnet2")
+        .flags(statistics::pdf | statistics::total | statistics::nozero |
+            statistics::oneline)
+        ;    
 
     m_packet_network_latency
         .init(m_virtual_networks)

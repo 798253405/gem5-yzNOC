@@ -133,6 +133,7 @@ bool
 OutgoingRequestBridge::
 OutgoingRequestPort::recvTimingReq(PacketPtr pkt)
 {
+     std::cout<<"debugyzzzwhichrecvTimingReq?src/sst/outgoing_requesti_bridge"<<std::endl;
     owner->sstResponder->handleRecvTimingReq(pkt);
     return true;
 }
