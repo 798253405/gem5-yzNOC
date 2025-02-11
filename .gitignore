@@ -24,3 +24,5 @@ src/mem/slicc/parser.out
 *.out
 
 configs/.idea/
+
+yzzzni_tick_log.txt
