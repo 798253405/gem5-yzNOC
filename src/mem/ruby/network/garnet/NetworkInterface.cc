@@ -67,6 +67,33 @@ NetworkInterface::NetworkInterface(const Params &p)
     //yzkth
     
     schedule(m_yztick_event, nextCycle()); // 首次调度事件
+    // 读取 action 文件，获取 episode 编号
+    std::string action_filename = "yzRLPython/logs/action_" + std::to_string(m_id) + ".txt";
+    std::ifstream action_infile(action_filename);
+    int last_episode = -1;
+    if (action_infile.is_open()) {
+        std::string line;
+        while (std::getline(action_infile, line)) {
+            std::istringstream iss(line);
+            std::string episode_str;
+            if (iss >> episode_str) {
+                try {
+                    size_t pos;
+                    int episode = std::stoi(episode_str, &pos);
+                    if (pos == episode_str.size()) {  // 确保整个字符串都被转换
+                        last_episode = episode;
+                    }
+                } catch (const std::exception& e) {
+                    // 转换失败，忽略这一行
+                }
+            }
+        }
+        action_infile.close();
+    } else {
+        warn("NetworkInterface::init(): Could not open action file: %s\n", action_filename.c_str());
+    }
+    currentEposideInCPP = last_episode + 1; // 设置 currentEposideInCPP
+   
 }
 //yzkth
 int totalWrittenNIs = 0; // 记录已经写入的 NI 数量
@@ -78,18 +105,7 @@ void NetworkInterface::yzperTickFunction()
     // 1. 打开文件，写入当前 NI 的 Tick
      // 不管是不是第16个ni，都要执行下一次,重新调度下一次事件
      schedule(m_yztick_event, clockEdge(Cycles(100)));
-     std::stringstream filename_stream;
-     filename_stream << "yzRLPython/yzzzni_tick_log_" <<"0" << ".txt"; //m_id
-     std::string filename = filename_stream.str(); // 转换为 std::string
- 
-     std::ofstream outfile(filename, std::ios::app);
-    if (outfile.is_open()) {
-        outfile  << "NI ID: " << m_id << ", Cycle: " << curCycle() << ", Tick: "<< curTick() <<", yzPacketPeriodSumQueueDelay:"
-        <<yzPacketPeriodSumQueueDelay << ", yzPacketPeriodSumNetDelay: " << yzPacketPeriodSumNetDelay << ", yzPacketPeriodCount: " << yzPacketPeriodCount << std::endl;
-        outfile.close();
-    } else {
-        warn("NetworkInterface::yzperTickFunction(): Could not open yzzzni_tick_log.txt\n");
-    }
+   
 
 
     // 更新已写入的 NI 数量
@@ -102,10 +118,10 @@ void NetworkInterface::yzperTickFunction()
 
 
     // 如果未达到 16 个 NI，直接返回
-    if (totalWrittenNIs < 16) {
+    if (totalWrittenNIs < 31) {
         return;
     }
-    else if (totalWrittenNIs == 16) {
+    else if (totalWrittenNIs == 31) {
         totalWrittenNIs = 0;  // 重新开始计数
     }
 
@@ -115,12 +131,39 @@ void NetworkInterface::yzperTickFunction()
     while (true) { //true
         std::this_thread::sleep_for(std::chrono::milliseconds(10));  // 10ms 休眠，减少 CPU 占用
 
+
+
+        std::stringstream filename_stream;
+        filename_stream << "yzRLPython/logs/yzzzni_tick_log_" <<m_id<< ".txt"; //m_id // 注意，每次的slowest m_id都可能不一样？
+        std::string filenameCPPWrite = filename_stream.str(); // 转换为 std::string
+    
+        std::ofstream outfile(filenameCPPWrite, std::ios::app);
+       if (outfile.is_open()) {
+           outfile <<"currentEposideInCPP: "<<currentEposideInCPP << ", NI ID: " << m_id << ", Cycle: " << curCycle() << ", Tick: "<< curTick() <<", yzPacketPeriodSumQueueDelay:"
+           <<yzPacketPeriodSumQueueDelay << ", yzPacketPeriodSumNetDelay: " << yzPacketPeriodSumNetDelay << ", yzPacketPeriodCount: " << yzPacketPeriodCount << std::endl;
+           outfile.close();
+       } else {
+           warn("NetworkInterface::yzperTickFunction(): Could not open yzzzni_tick_log.txt\n");
+       }
+
+
+       
+
         // 读取最新的 Tick 和 Value
-        std::string filename = "yzRLPython/logs/action_" + std::to_string(0) + ".txt";//m_id
-         std::ifstream infile(filename);
+        std::string filenameCPPRead = "yzRLPython/logs/action_" + std::to_string(m_id) + ".txt";//
+         std::ifstream infile(filenameCPPRead);
         if (infile.is_open()) {
-            infile>> pythonReadTick >>pythonValue;
+            std::string lastLine;
+            std::string line;
+            // **循环读取直到文件末尾，确保读取最后一行**
+            while (std::getline(infile, line)) {
+                lastLine = line;
+            }
             infile.close();
+            if (!lastLine.empty()) {
+                std::istringstream iss(lastLine);
+                iss >>  currentEposideInCPP >> pythonReadTick >> pythonValue;  // **读取 tick 和 action 值**
+            }
         }
             // 如果 Tick 发生变化
             if (pythonReadTick >= curTick()) {// 说明 Python 已经更新了文件
@@ -130,17 +173,21 @@ void NetworkInterface::yzperTickFunction()
             }
             else{
                 // always wait and stuck
-                std::ofstream outfile(filename, std::ios::app);
+                std::string filenamedebug = "yzRLPython/logs/yzdebug_" + std::to_string(m_id) + ".txt";
+                std::ofstream outfile(filenamedebug, std::ios::out);
                 if (outfile.is_open()) {
-                    outfile  <<" pythonReadTick " << pythonReadTick ;
+                    outfile  <<"currentEposideInCPP: "<<currentEposideInCPP <<" Iam waittingpythonReadTick " << pythonReadTick ;
                       outfile.close();
                 } 
-                return;
+            
             }
        
 
         
     }
+
+
+
 }
 
 
@@ -256,20 +303,20 @@ NetworkInterface::incrementStats(flit *t_flit)
         m_net_ptr->increment_yzAllreceivedpackets(vnet,network_delay,queueing_delay);
 
         //yzKTH int src_ni_id = t_flit->get_route().src_ni;
-         yzOneNI_recordOnePacket(t_flit->get_route().src_ni , m_id, vnet,queueing_delay, network_delay);
+         yzOneNI_recordOnePacket(t_flit->get_route().src_ni ,t_flit->get_route().dest_ni, m_id, vnet,queueing_delay, network_delay);
     }
 
     // Hops
     m_net_ptr->increment_total_hops(t_flit->get_route().hops_traversed);
 }
-void NetworkInterface::yzOneNI_recordOnePacket(int  sourceNIID, int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) {
+void NetworkInterface::yzOneNI_recordOnePacket(int  sourceNIID, int dest_niID,int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) {
     yzPacketPeriodSumQueueDelay = yzPacketPeriodSumQueueDelay + in_queueing_delay;
       yzPacketPeriodSumNetDelay  =  yzPacketPeriodSumNetDelay + in_network_delay;
        yzPacketPeriodCount  =  yzPacketPeriodCount  + 1;
     std::ofstream outfile;
-    outfile.open("yzRLPython/logs/ni_packet_log.txt", std::ios::app);  // 追加模式 
+    outfile.open("yzRLPython/logs/justdebugni_packet_log.txt", std::ios::app);  // 追加模式 
     if (outfile.is_open()) {
-        outfile << "Source NI ID: " <<  sourceNIID <<" m_id:"<< m_id  // 记录发送方 NI 和记录方id
+        outfile << "Source NI ID: " <<  sourceNIID <<" dest_niID " <<dest_niID<<" m_id:"<< m_id  // 记录发送方 NI 和记录方id
                 << ", VNet: " << onWhichVNet
                 << ", Network Delay: " << in_queueing_delay <<"  yzPacketPeriodSumQueueDelay" << yzPacketPeriodSumQueueDelay
                 << ", Queueing Delay: " << in_network_delay
