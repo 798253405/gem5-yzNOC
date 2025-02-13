@@ -140,7 +140,7 @@ cpus = [
     for i in range(args.num_cpus)
 ]
 for cpu in cpus:
-    print("pythondebugyzzzzcpus ", cpu.type, m5.curTick(),cpu.inj_rate,cpu.inj_vnet,cpu.num_dest,cpu.sim_cycles)
+    print("pythondebugyzzzzcpus ", cpu.type, m5.curTick(),cpu.inj_rate,cpu.inj_vnet," cpu.num_dest:", cpu.num_dest," cpu.simcycle",cpu.sim_cycles)
 # create the desired simulated system
 system = System(cpu=cpus, mem_ranges=[AddrRange(args.mem_size)])
 print("\npythondebugyzzzzsystem ",system.mem_mode   )

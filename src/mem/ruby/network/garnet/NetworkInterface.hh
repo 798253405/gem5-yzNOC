@@ -82,7 +82,11 @@ class NetworkInterface : public ClockedObject, public Consumer
     float yz_InjRate = 25.0/100.0;
     EventFunctionWrapper m_yztick_event; // 添加事件成员
     void yzperTickFunction();           // 添加 perTickFunction() 声明
-
+    void yzOneNI_recordOnePacket(int  sourceNIID, int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay);     // 添加记录函数声明
+    float yzPacketPeriodSumQueueDelay = 0;
+    float yzPacketPeriodSumNetDelay = 0;
+    int   yzPacketPeriodCount = 0;
+    float yzActionFromPython = 25;
 
 
 

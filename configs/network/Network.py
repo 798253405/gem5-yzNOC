@@ -273,6 +273,7 @@ def init_network(options, network, InterfaceClass):
         netifs = [
             InterfaceClass(id=i) for (i, n) in enumerate(network.ext_links)
         ]
+        print("yzzzz network.pyline276 netifs:", len(netifs) ,"network.ext_links",len(network.ext_links))
         network.netifs = netifs
 
     if options.network_fault_model:
