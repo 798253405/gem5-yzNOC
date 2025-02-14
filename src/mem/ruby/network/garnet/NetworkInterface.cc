@@ -110,6 +110,21 @@ void NetworkInterface::yzperTickFunction()
 
     // 更新已写入的 NI 数量
     totalWrittenNIs++;
+
+    std::stringstream filename_stream;
+    filename_stream << "yzRLPython/logs/yzzzni_tick_log_" <<m_id<< ".txt"; //m_id // 注意，每次的slowest m_id都可能不一样？
+    std::string filenameCPPWrite = filename_stream.str(); // 转换为 std::string
+
+    std::ofstream outfile(filenameCPPWrite, std::ios::app);
+   if (outfile.is_open()) {
+       outfile <<"currentEposideInCPP: "<<currentEposideInCPP << ", NI ID: " << m_id << ", Cycle: " << curCycle() << ", Tick: "<< curTick() <<", yzPacketPeriodSumQueueDelay:"
+       <<yzPacketPeriodSumQueueDelay << ", yzPacketPeriodSumNetDelay: " << yzPacketPeriodSumNetDelay << ", yzPacketPeriodCount: " << yzPacketPeriodCount << std::endl;
+       outfile.close();
+   } else {
+       warn("NetworkInterface::yzperTickFunction(): Could not open yzzzni_tick_log.txt\n");
+   }
+
+
     // reset the record of each period
     yzPacketPeriodSumQueueDelay = 0;
     yzPacketPeriodSumNetDelay = 0;
@@ -118,10 +133,10 @@ void NetworkInterface::yzperTickFunction()
 
 
     // 如果未达到 16 个 NI，直接返回
-    if (totalWrittenNIs < 31) {
+    if (totalWrittenNIs < 32) {
         return;
     }
-    else if (totalWrittenNIs == 31) {
+    else if (totalWrittenNIs == 32) {
         totalWrittenNIs = 0;  // 重新开始计数
     }
 
@@ -133,24 +148,10 @@ void NetworkInterface::yzperTickFunction()
 
 
 
-        std::stringstream filename_stream;
-        filename_stream << "yzRLPython/logs/yzzzni_tick_log_" <<m_id<< ".txt"; //m_id // 注意，每次的slowest m_id都可能不一样？
-        std::string filenameCPPWrite = filename_stream.str(); // 转换为 std::string
-    
-        std::ofstream outfile(filenameCPPWrite, std::ios::app);
-       if (outfile.is_open()) {
-           outfile <<"currentEposideInCPP: "<<currentEposideInCPP << ", NI ID: " << m_id << ", Cycle: " << curCycle() << ", Tick: "<< curTick() <<", yzPacketPeriodSumQueueDelay:"
-           <<yzPacketPeriodSumQueueDelay << ", yzPacketPeriodSumNetDelay: " << yzPacketPeriodSumNetDelay << ", yzPacketPeriodCount: " << yzPacketPeriodCount << std::endl;
-           outfile.close();
-       } else {
-           warn("NetworkInterface::yzperTickFunction(): Could not open yzzzni_tick_log.txt\n");
-       }
-
-
        
 
         // 读取最新的 Tick 和 Value
-        std::string filenameCPPRead = "yzRLPython/logs/action_" + std::to_string(m_id) + ".txt";//
+        std::string filenameCPPRead = "yzRLPython/logs/action_" + std::to_string(2025) + ".txt";//m_id
          std::ifstream infile(filenameCPPRead);
         if (infile.is_open()) {
             std::string lastLine;
@@ -162,7 +163,7 @@ void NetworkInterface::yzperTickFunction()
             infile.close();
             if (!lastLine.empty()) {
                 std::istringstream iss(lastLine);
-                iss >>  currentEposideInCPP >> pythonReadTick >> pythonValue;  // **读取 tick 和 action 值**
+                iss >>  cppReadPythonFileEposide >> pythonReadTick >> pythonValue;  // **读取 tick 和 action 值**
             }
         }
             // 如果 Tick 发生变化
@@ -176,7 +177,7 @@ void NetworkInterface::yzperTickFunction()
                 std::string filenamedebug = "yzRLPython/logs/yzdebug_" + std::to_string(m_id) + ".txt";
                 std::ofstream outfile(filenamedebug, std::ios::out);
                 if (outfile.is_open()) {
-                    outfile  <<"currentEposideInCPP: "<<currentEposideInCPP <<" Iam waittingpythonReadTick " << pythonReadTick ;
+                    outfile  <<"currentEposideInCPP: "<<currentEposideInCPP <<" cppReadPythonFileEposide "<<cppReadPythonFileEposide<<" Iam waittingpythonReadTick " << pythonReadTick  << " read action"<< pythonValue << " curTick()cppis "<<curTick()<<std::endl;
                       outfile.close();
                 } 
             

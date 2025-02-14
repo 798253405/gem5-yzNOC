@@ -88,7 +88,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     int   yzPacketPeriodCount = 0;
     float yzActionFromPython = 25;
     int currentEposideInCPP = 0;
-
+    int cppReadPythonFileEposide  = 0;
 
 
 
