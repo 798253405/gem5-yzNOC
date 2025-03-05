@@ -30,3 +30,15 @@ yzzzni_tick_log.txt
 wait_until_python.txt
 
 yzRLPython/logs/
+
+useless.txt
+
+yzRLPython/refNoad/
+
+yzRLPython/temp/
+
+yzRLPython/.idea/
+
+yzRLPython/InjRates/injection_log.csv
+
+.vscode/

@@ -252,8 +252,7 @@ bool
 RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
 { 
     //std::cout<<"debugyzzzwhichrecvTimingReq?src/mem/ruby/system/rubyport.cc/memresponseport"<<std::endl;
-       DPRINTF(yzzzzNI, "Timing request for address %#x on port %d\n",
-            pkt->getAddr(), id );
+     //  DPRINTF(yzzzzNI, "Timing request for address %#x on port %d\n",     pkt->getAddr(), id );
     DPRINTF(RubyPort, "Timing request for address %#x on port %d\n",
             pkt->getAddr(), id);
 

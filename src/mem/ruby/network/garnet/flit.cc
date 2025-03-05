@@ -109,8 +109,7 @@ flit::deserialize(int des_id, int num_flits, uint32_t bWidth)
 
     flit *fl = new flit(m_packet_id, new_id, m_vc, m_vnet, m_route,
                     new_size, m_msg_ptr, msgSize, bWidth, m_time);
-    DPRINTF(yzzzzNI, "debugyzzzNI garnetflit.cc line112  packet_id=%d   id=%d vc=%d vnet=%d src_ni=%d src_router=%d  destni=%d dest_router=%d \n ",
-            m_packet_id, new_id,m_vc, m_vnet,m_route.src_ni,m_route.src_router,m_route.dest_ni,m_route.dest_router );
+  //  DPRINTF(yzzzzNI, "debugyzzzNI garnetflit.cc line112  packet_id=%d   id=%d vc=%d vnet=%d src_ni=%d src_router=%d  destni=%d dest_router=%d \n ",      m_packet_id, new_id,m_vc, m_vnet,m_route.src_ni,m_route.src_router,m_route.dest_ni,m_route.dest_router );
     fl->set_enqueue_time(m_enqueue_time);
     fl->set_src_delay(src_delay);
     return fl;

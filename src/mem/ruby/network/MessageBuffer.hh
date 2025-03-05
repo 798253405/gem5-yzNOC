@@ -74,6 +74,8 @@ namespace ruby
 class MessageBuffer : public SimObject
 {
   public:
+ 
+  uint64_t m_msg_counter; // 消息计数器  benlai  shi private
     typedef MessageBufferParams Params;
     MessageBuffer(const Params &p);
 
@@ -161,6 +163,7 @@ class MessageBuffer : public SimObject
     int getIncomingLink() const { return m_input_link_id; }
     int getVnet() const { return m_vnet_id; }
 
+    
     Port &
     getPort(const std::string &, PortID idx=InvalidPortID) override
     {
@@ -269,7 +272,7 @@ class MessageBuffer : public SimObject
     unsigned int m_stalled_at_cycle_start;
     unsigned int m_msgs_this_cycle;
 
-    uint64_t m_msg_counter;
+    
     int m_priority_rank;
     const bool m_strict_fifo;
     const MessageRandomization m_randomization;

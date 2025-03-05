@@ -92,7 +92,7 @@ Network::Network(const Params &p)
             }
         }
     }
-     DPRINTF(yzzzzNI, "yzzzdebugnetwork.cc   %d   %d %d %d %d \n",   m_nodes, p.routers.size(),   m_virtual_networks,p.ext_links.size(), p.int_links.size());
+   //  DPRINTF(yzzzzNI, "yzzzdebugnetwork.cc   %d   %d %d %d %d \n",   m_nodes, p.routers.size(),   m_virtual_networks,p.ext_links.size(), p.int_links.size());
  
     // Total nodes/controllers in network is equal to the local node count
     // Must make sure this is called after the State Machine constructors

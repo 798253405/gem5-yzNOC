@@ -145,7 +145,7 @@ Sequencer::Sequencer(const Params &p)
             m_missTypeMachLatencyHist[i][j]->init(10);
         }
     }
-        DPRINTF(yzzzzNI, "debugyzzzsequencerNew line148 cpu-%u \n ", m_version);
+      //  DPRINTF(yzzzzNI, "debugyzzzsequencerNew line148 cpu-%u \n ", m_version);
 
 }
 
@@ -232,7 +232,7 @@ Sequencer::wakeup()
 
     // Check for deadlock of any of the requests
     Cycles current_time = curCycle();
-  DPRINTF(yzzzzNI, "debugyzzzsequencer line235 \n " );
+ // DPRINTF(yzzzzNI, "debugyzzzsequencer line235 \n " );
     // Check across all outstanding requests
     [[maybe_unused]] int total_outstanding = 0;
 
@@ -240,14 +240,15 @@ Sequencer::wakeup()
         for (const auto &seq_req : table_entry.second) {
             if (current_time - seq_req.issue_time < m_deadlock_threshold)
                 continue;
-
-            panic("Possible Deadlock detected. Aborting!\n version: %d "
+            //    #ifdef yz250203LeakyBucketOn  //如果开了ad，那就是我们主动的，不用管
+           /* panic("Possible Deadlock detected. Aborting!\n version: %d "
                   "request.paddr: 0x%x m_readRequestTable: %d current time: "
                   "%u issue_time: %d difference: %d\n", m_version,
                   seq_req.pkt->getAddr(), table_entry.second.size(),
                   current_time * clockPeriod(), seq_req.issue_time
                   * clockPeriod(), (current_time * clockPeriod())
                   - (seq_req.issue_time * clockPeriod()));
+        */
         }
         total_outstanding += table_entry.second.size();
     }

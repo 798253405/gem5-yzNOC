@@ -101,8 +101,7 @@ GarnetNetwork::GarnetNetwork(const Params &p)
         NetworkInterface *ni = safe_cast<NetworkInterface *>(*i);
         m_nis.push_back(ni);
         ni->init_net_ptr(this);
-        DPRINTF(yzzzzNI, "debugyzzzGarnetwork.cc line104 m_nis.size()=%d  p.netifs.size()=%d m_nodes =%d  m_routers=%d \n ",
-        m_nis.size(),p.netifs.size(), m_nodes, m_routers.size()  );
+        //DPRINTF(yzzzzNI, "debugyzzzGarnetwork.cc line104 m_nis.size()=%d  p.netifs.size()=%d m_nodes =%d  m_routers=%d \n ",m_nis.size(),p.netifs.size(), m_nodes, m_routers.size()  );
     }
 
     // Print Garnet version
@@ -222,8 +221,7 @@ GarnetNetwork::makeExtInLink(NodeID global_src, SwitchID dest, BasicLink* link,
     } else {
         m_routers[dest]->addInPort(dst_inport_dirn, net_link, credit_link);
     }
-        DPRINTF(yzzzzNI, "debugyzzzGarnetwork.cc line120ini  global_src=%d  destswtich=%d  \n ",
-        global_src, dest );
+       // DPRINTF(yzzzzNI, "debugyzzzGarnetwork.cc line120ini  global_src=%d  destswtich=%d  \n ",global_src, dest );
 
 }
 

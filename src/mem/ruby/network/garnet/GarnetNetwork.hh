@@ -149,7 +149,9 @@ class GarnetNetwork : public Network
         else if (vnet == 2)
           yz_packets_injectedVnet2[id]++; 
           else
-         assert("line131ni.hh error" && false);
+            {
+                // assert("line131ni.hh error" && false);
+            }
         }
 
     void

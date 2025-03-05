@@ -53,8 +53,12 @@
 #include <thread>       // std::this_thread
 
 
+
 #include "debug/yzzzzNI.hh"
 #define yz250203LeakyBucketOn 
+#define yz250218RLReadFile
+#define yzRecordActualInjRate
+#define yzBufferLoadADInjRate250224
 namespace gem5
 {
 
@@ -65,7 +69,8 @@ class MessageBuffer;
 
 namespace garnet
 {
-
+  
+    
 class flitBuffer;
 
 class NetworkInterface : public ClockedObject, public Consumer
@@ -79,17 +84,37 @@ class NetworkInterface : public ClockedObject, public Consumer
     int yz_ADtokenUsed = 0;
     int yz_ADtokenWasted = 0;
     int yz_tokenInBucket = 0;
-    float yz_InjRate = 25.0/100.0;
-    EventFunctionWrapper m_yztick_event; // 添加事件成员
+    float yz_InjRate = 200.0/200.0;
+    EventFunctionWrapper m_yztick_event,m_yzRecordSelfInjPacket; // 添加事件成员
     void yzperTickFunction();           // 添加 perTickFunction() 声明
     void yzOneNI_recordOnePacket(int  sourceNIID, int dest_niID,int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) ;
      float yzPacketPeriodSumQueueDelay = 0;
     float yzPacketPeriodSumNetDelay = 0;
     int   yzPacketPeriodCount = 0;
-    float yzActionFromPython = 25;
-    int currentEposideInCPP = 0;
-    int cppReadPythonFileEposide  = 0;
+    float yzActionFromPython = 0.5;
+   
+ 
 
+    static  int totalWrittenNIs  ; // 记录已经写入的 NI 数量
+    Tick pythonReadTick = 0;
+ 
+
+    int yzPeriodActualInjPacketCount = 0;
+    void  m_yzRecordSelfInjPacketFunction();
+
+    const int yzResetTokenPeriod = 20000; // 重置 Token 的周期, clock cycle rather than ticks
+    void yzWritePeriodStateFile(int in_m_id);
+    void yzReadAndStuckForPythonFIle(int in_m_id);
+    unsigned long long int yzLastPeriodCycleForTokenGen = 0;
+    unsigned long long int yz_ADNewPeriodtokenGenerated;
+    void  yzResetBucketPeriod();
+    int yzCheckIniEvent = 0;
+    int yzLast_ADNewPeriodtokenGenerated ;
+
+    static float yz_shareActionAllNIs;
+    static float  yz_shareNICPURequestList[128]; // 64 个 NI 的 CPU 请求列表
+    int yz_preCPUInjSignalCount = 0;
+    int yz_curCPUInjSignalCount = 0;
 
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
