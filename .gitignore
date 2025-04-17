@@ -42,3 +42,7 @@ yzRLPython/.idea/
 yzRLPython/InjRates/injection_log.csv
 
 .vscode/
+
+src/yzPythonCode/.idea/workspace.xml
+
+src/yzPythonCode/.idea/yzPythonCode.iml

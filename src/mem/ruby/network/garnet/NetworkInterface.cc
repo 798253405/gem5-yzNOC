@@ -189,7 +189,7 @@ void NetworkInterface::m_yzRecordSelfInjPacketFunction(){
     }
      #endif
 */
-NetworkInterface::yz_shareActionAllNIs= 0.5;
+NetworkInterface::yz_shareActionAllNIs= 1.01;
  
 
 
@@ -268,7 +268,8 @@ if (   newBashEnable == true )   {  //newBashEnable == true 一开始就启动�
     std::string command = 
         "gnome-terminal -- bash -c '"
         "pwd; ls; "
-        "./build/X86_MOESI_hammeryz1wVCBuffer/gem5.opt "
+         "./build/X86_MOESI_hammeryz1point0/gem5.opt "
+        //"./build/X86_MOESI_hammeryz1wVCBuffer/gem5.opt "
         "-d m5out/250225/blacksholes/ "
         "configs/deprecated/example/fs.py "
         "--checkpoint-restore=1 "
