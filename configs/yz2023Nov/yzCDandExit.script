@@ -1,1 +1,0 @@
-cd /home/gem5/parsec-benchmark; source env.sh;  echo " YZZZ source done ";  m5 checkpoint;  sleep 5; m5 exit; 

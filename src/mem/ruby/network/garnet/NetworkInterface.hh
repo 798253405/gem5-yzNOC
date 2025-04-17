@@ -51,6 +51,9 @@
 #include "sim/eventq.hh" // 包含 Event 相关头文件
 #include <filesystem>   // C++17 std::filesystem
 #include <thread>       // std::this_thread
+#include "sim/simulate.hh" // 包含 simulate_limit_event"" 
+#include <unistd.h>
+
 
 
 
@@ -83,17 +86,19 @@ class NetworkInterface : public ClockedObject, public Consumer
     int yz_ADtokenGenerated = 0;
     int yz_ADtokenUsed = 0;
     int yz_ADtokenWasted = 0;
-    int yz_tokenInBucket = 0;
+    double yz_tokenInBucket = 0;
     float yz_InjRate = 200.0/200.0;
     EventFunctionWrapper m_yztick_event,m_yzRecordSelfInjPacket; // 添加事件成员
     void yzperTickFunction();           // 添加 perTickFunction() 声明
     void yzOneNI_recordOnePacket(int  sourceNIID, int dest_niID,int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) ;
      float yzPacketPeriodSumQueueDelay = 0;
     float yzPacketPeriodSumNetDelay = 0;
+    float yzPacketPeriodAvgQueueDelay = 0;
+    float yzPacketPeriodAvgNetDelay = 0;
     int   yzPacketPeriodCount = 0;
     float yzActionFromPython = 0.5;
    
- 
+    
 
     static  int totalWrittenNIs  ; // 记录已经写入的 NI 数量
     Tick pythonReadTick = 0;
@@ -105,8 +110,8 @@ class NetworkInterface : public ClockedObject, public Consumer
     const int yzResetTokenPeriod = 20000; // 重置 Token 的周期, clock cycle rather than ticks
     void yzWritePeriodStateFile(int in_m_id);
     void yzReadAndStuckForPythonFIle(int in_m_id);
-    unsigned long long int yzLastPeriodCycleForTokenGen = 0;
-    unsigned long long int yz_ADNewPeriodtokenGenerated;
+    long long yzLastPeriodCycleForTokenGen = 0;
+     int yz_ADNewPeriodtokenGenerated;
     void  yzResetBucketPeriod();
     int yzCheckIniEvent = 0;
     int yzLast_ADNewPeriodtokenGenerated ;
@@ -116,6 +121,9 @@ class NetworkInterface : public ClockedObject, public Consumer
     int yz_preCPUInjSignalCount = 0;
     int yz_curCPUInjSignalCount = 0;
 
+    bool newBashEnable = true;
+    static float yz_shareInjRateNoC;
+    static float yz_shareNoCTotalPacketCount;
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,

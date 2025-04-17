@@ -441,5 +441,7 @@ if buildEnv["USE_ARM_ISA"] and not args.bare_metal and not args.dtb_filename:
 if args.wait_gdb:
     test_sys.workload.wait_for_remote_gdb = True
 
+
+
 Simulation.setWorkCountOptions(test_sys, args)
 Simulation.run(args, root, test_sys, FutureClass)
