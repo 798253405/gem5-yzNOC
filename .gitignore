@@ -9,8 +9,6 @@ configs/topologies/__pycache__/
 
 configs/ruby/__pycache__/
 
-ext/
-
 m5out/
 
 util/term/
