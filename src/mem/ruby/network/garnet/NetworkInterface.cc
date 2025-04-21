@@ -287,8 +287,7 @@ if (   newBashEnable == true )   {  //newBashEnable == true 一开始就启动�
         "--num-dirs=64 "
         "--num-l2caches=64 "
         //"--script=configs/yz2023Nov/large_directparsec/yzfs_largeparsecblacksholes.script "
-        "--script=configs/yz2023Nov/large_directparsec/yzfs_largeparsecblacksholes.script "
-       //"--script=configs/yz2023Nov/large/yzfs_largeparsecblacksholes.script "   ///yzfs_largeparsecbodytrack.script
+        "--script=configs/yz2023Nov/large_directparsec/yzfs_largeparsecbodytrack.script "
         "--abs-max-tick=" + std::to_string(get_max_tick() + yzResetTokenPeriod * 500) +
         "; '";   
 
