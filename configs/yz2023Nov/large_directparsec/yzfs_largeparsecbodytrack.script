@@ -1,0 +1,1 @@
+parsecmgmt -a run -p bodytrack  -c gcc-hooks -i simlarge  -n 64; sleep 1; m5 exit;
