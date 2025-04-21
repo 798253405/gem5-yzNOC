@@ -189,7 +189,7 @@ void NetworkInterface::m_yzRecordSelfInjPacketFunction(){
     }
      #endif
 */
-NetworkInterface::yz_shareActionAllNIs= 0.8;
+NetworkInterface::yz_shareActionAllNIs= 1.2; //1.2 for bodytrack
  
 
 
@@ -270,7 +270,8 @@ if (   newBashEnable == true )   {  //newBashEnable == true 一开始就启动�
         "pwd; ls; "
         // "./build/X86_MOESI_hammeryz1point0/gem5.opt "
         "./build/X86_MOESI_hammeryz1wVCBuffer/gem5.opt "
-        "-d m5out/250225/blacksholes/ "
+        //"-d m5out/250225/blacksholes/ "
+        "-d m5out/250225/bodytrack/ "
         "configs/deprecated/example/fs.py "
         "--checkpoint-restore=1 "
         "--checkpoint-dir=/home/yz/myprojects/2024GEM5/parsec-tests/yzmodifiedgem5/m5out/checkpoint/250224 "
@@ -285,6 +286,7 @@ if (   newBashEnable == true )   {  //newBashEnable == true 一开始就启动�
         "--mesh-rows=8 "
         "--num-dirs=64 "
         "--num-l2caches=64 "
+        //"--script=configs/yz2023Nov/large_directparsec/yzfs_largeparsecblacksholes.script "
         "--script=configs/yz2023Nov/large_directparsec/yzfs_largeparsecblacksholes.script "
        //"--script=configs/yz2023Nov/large/yzfs_largeparsecblacksholes.script "   ///yzfs_largeparsecbodytrack.script
         "--abs-max-tick=" + std::to_string(get_max_tick() + yzResetTokenPeriod * 500) +

@@ -4,7 +4,7 @@ import pandas as pd
 
 # 基础路径和配置
 base_directory = "/home/yz/myprojects/2024GEM5/parsec-tests/yzmodifiedgem5/yzRLPython/oneAction/"
-num_epochs = 500
+num_epochs = 31
 
 readFOLDER_ACTION = 1.01#2025#0.82025
 starttick = 334516476158500
@@ -138,7 +138,7 @@ print(df)
 
 
 
-readFOLDER_ACTION = 0.95
+readFOLDER_ACTION = 1.2
 directory = os.path.join(base_directory, f"inj_{readFOLDER_ACTION}")
 # 存放所有 epoch 的原始字符串数据
 all_epochs_data_AD = []
@@ -265,8 +265,11 @@ percentage_diff = np.where(
 count_positive = sum(1 for num in percentage_diff if num > 0)
 count_significant_positiveRate = sum(1 for num in percentage_diff if num > 2) / len(percentage_diff)
 positive_numbers = [num for num in percentage_diff  if num > 0]
-average_of_positives = sum(positive_numbers) / len(positive_numbers)
-print("count_positive / len(percentage_diff)= ",count_positive / len(percentage_diff), "average_of_positives= ",average_of_positives,"count_significant_positiveRate= ",count_significant_positiveRate)
+if (len(positive_numbers) > 0):
+    average_of_positives = sum(positive_numbers) / len(positive_numbers)
+    print("count_positive / len(percentage_diff)= ",count_positive / len(percentage_diff), "average_of_positives= ",average_of_positives,"count_significant_positiveRate= ",count_significant_positiveRate)
+else:
+    print("len(positive_numbers) = 0")
 ##只是爲了看圖方便！結束
 # 3. 创建图形和子图 (2行1列，共享X轴)
 fig, axes = plt.subplots(
@@ -400,7 +403,7 @@ for epoch_index in range(num_epochs):
     if any(any(cycle != "" for cycle in node) for node in epoch_data):
         all_epochs_data_05.append(epoch_data)  # 添加到 _05 列表
 
-print("Finished read_node_data for 0.5")
+print("Finished read_node_data for data-C {readFOLDER_ACTION_05}")
 
 # --- 將字符串轉為數字列表 (for 0.5) ---
 # 注意：這裡使用了之前定義的 extract_numbers_from_line 函數
@@ -417,7 +420,7 @@ for onefiledata in all_epochs_data_05:  # 使用 _05 數據
         onefiledata_nostring.append(nodedata_nostring)
     all_epochs_data_nostring_05.append(onefiledata_nostring)  # 添加到 _05 列表
 
-# --- 轉為 numpy 数组并打印维度 (for 0.5) ---
+# --- 轉為 numpy 数组并打印维度 (for DATA-C) ---
 data_array_05 = np.array(all_epochs_data_nostring_05, dtype=np.float32)  # 新增變量名
 print("data_array_05.shape:", data_array_05.shape)  # 打印新數組的維度
 
@@ -434,13 +437,13 @@ columns_05 = ['timestamp', 'v1', 'v2', 'yzPeriodActualInjPacketCount', 'v4', 'v5
               'yzPacketPeriodCountreceived']  # 可以根據需要修改
 df_05 = pd.DataFrame(avg_all_epochs_data_nostring_noclevelavgdata_05, columns=columns_05)  # 新增 DataFrame
 
-print("\n每个 epoch 的平均值 (for 0.5):")
+print("\n每个 epoch 的平均值 (for dataC {readFOLDER_ACTION_05}):")
 print(df_05)
 print("\n" + "=" * 30 + "\nFinished processing for inj_0.5\n" + "=" * 30)
 # ===========================================================
 # 新增：计算 0.5 vs 1.01 的百分比差异和统计
 # ===========================================================
-print("\n" + "="*30 + "\nStatistics for 0.5 vs 1.01\n" + "="*30)
+print("\n" + "="*30 + "\nStatistics for dataC vs 1.01\n" + "="*30)
 
 # 提取 1.01 (baseline) 和 0.5 的第 8 列数据
 data_a = avg_all_epochs_data_nostring_noclevelavgdata[:, 8] # Baseline (1.01) - 保持不變
@@ -450,7 +453,7 @@ data_c = avg_all_epochs_data_nostring_noclevelavgdata_05[:, 8] # 新数据 (0.5)
 min_len_05 = min(len(data_a), len(data_c))
 data_a_trimmed_05 = data_a[:min_len_05]
 data_c_trimmed = data_c[:min_len_05]
-print(f"Warning: Trimming data for 0.5 comparison to {min_len_05} epochs if lengths differ.")
+print(f"Warning: Trimming data for data-C comparison to {min_len_05} epochs if lengths differ.")
 
 # 计算百分比差异 (0.5 vs 1.01)
 epsilon = 1e-9 # 防止除以零
@@ -476,13 +479,13 @@ if len(percentage_diff_05) > 0:
     else:
         average_of_positives_05 = 0 # 或者 np.nan
 
-    print(f"Proportion of epochs where 0.5 > 1.01: {proportion_positive_05:.4f} ({proportion_positive_05*100:.2f}%)")
-    print(f"Average percentage increase (when 0.5 > 1.01): {average_of_positives_05:.4f}%")
-    print(f"Proportion of epochs where 0.5 has >2% increase vs 1.01: {count_significant_positiveRate_05:.4f} ({count_significant_positiveRate_05*100:.2f}%)")
+    print(f"Proportion of epochs where data-C > 1.01: {proportion_positive_05:.4f} ({proportion_positive_05*100:.2f}%)")
+    print(f"Average percentage increase (when dataC  > 1.01): {average_of_positives_05:.4f}%")
+    print(f"Proportion of epochs where DATA-C has >2% increase vs 1.01: {count_significant_positiveRate_05:.4f} ({count_significant_positiveRate_05*100:.2f}%)")
 else:
-    print("Could not calculate statistics for 0.5 vs 1.01 (possibly empty data).")
+    print("Could not calculate statistics for DATA-C vs 1.01 (possibly empty data).")
 
-print("\n" + "="*30 + "\nEnd Statistics for 0.5 vs 1.01\n" + "="*30)
+print("\n" + "="*30 + "\nEnd Statistics for DATA-C vs 1.01\n" + "="*30)
 # 在你的繪圖代碼塊中:
 # 找到 fig, axes = plt.subplots(...) 這一行
 
@@ -607,12 +610,12 @@ if 'data_b' in locals() and 'data_c' in locals() and 'min_len' in locals():
             # else: # val_b == val_c (包括两个都是 NaN 或相等的情况)
             #     pass # 可以选择忽略或单独计数
 
-        print(f"Number of epochs where Method 0.5 > Method 0.95 (Column 8): {count_05_better_than_095} out of {min_len} epochs")
-        print(f"Number of epochs where Method 0.95 > Method 0.5 (Column 8): {count_095_better_than_05} out of {min_len} epochs")
+        print(f"Number of epochs where Method DATA-C > Method DATA-B (Column 8): {count_05_better_than_095} out of {min_len} epochs")
+        print(f"Number of epochs where Method DATA-B > Method DATA-C (Column 8): {count_095_better_than_05} out of {min_len} epochs")
 
         # (可选) 打印相等或均为无效值的次数
         count_equal_or_nan = min_len - count_05_better_than_095 - count_095_better_than_05
-        print(f"Number of epochs where Method 0.5 == Method 0.95 or NaN involved (Column 8): {count_equal_or_nan} out of {min_len} epochs")
+        print(f"Number of epochs where Method DATA-C == Method DATA-B or NaN involved (Column 8): {count_equal_or_nan} out of {min_len} epochs")
 
     else:
         print("Error: Data arrays (data_b, data_c) are shorter than min_len.")
@@ -620,4 +623,4 @@ else:
     print("Error: Required variables (data_b, data_c, min_len) not defined before comparison.")
 
 
-print("\n" + "="*30 + "\nEnd Comparison Count for 0.5 vs 0.95\n" + "="*30)
+print("\n" + "="*30 + "\nEnd Comparison Count for DATC vs DATAB\n" + "="*30)
