@@ -68,10 +68,10 @@ def get_runtime_isa() -> ISA:
     :returns: The target ISA.
     """
 
-    warn(
-        "The `get_runtime_isa` function is deprecated. Please migrate away "
-        "from using this function."
-    )
+   # warn(
+       # "The `get_runtime_isa` function is deprecated. Please migrate away "
+       # "from using this function."
+   # )
 
     if "TARGET_ISA" in buildEnv.keys():
         return get_isa_from_str(buildEnv["TARGET_ISA"])

@@ -59,7 +59,7 @@
 
 #include "debug/yzzzzNI.hh"
 #define yz250203LeakyBucketOn 
-#define yz250218RLReadFile
+//#define yz250218RLReadFile
 #define yzRecordActualInjRate
 #define yzBufferLoadADInjRate250224
 namespace gem5
@@ -124,6 +124,8 @@ class NetworkInterface : public ClockedObject, public Consumer
     bool newBashEnable = true;
     static float yz_shareInjRateNoC;
     static float yz_shareNoCTotalPacketCount;
+
+    int tempThreshold = 0;
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,
