@@ -87,7 +87,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     int yz_ADtokenUsed = 0;
     int yz_ADtokenWasted = 0;
     double yz_tokenInBucket = 0;
-    float yz_InjRate = 200.0/200.0;
+    float yz_InjRate = 1.0999;
     EventFunctionWrapper m_yztick_event,m_yzRecordSelfInjPacket; // 添加事件成员
     void yzperTickFunction();           // 添加 perTickFunction() 声明
     void yzOneNI_recordOnePacket(int  sourceNIID, int dest_niID,int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) ;
