@@ -58,6 +58,10 @@
 
 
 #include "debug/yzzzzNI.hh"
+
+
+#include <onnxruntime_cxx_api.h>
+
 #define yz250203LeakyBucketOn 
 //#define yz250218RLReadFile
 #define yzRecordActualInjRate
@@ -91,11 +95,18 @@ class NetworkInterface : public ClockedObject, public Consumer
     EventFunctionWrapper m_yztick_event,m_yzRecordSelfInjPacket; // 添加事件成员
     void yzperTickFunction();           // 添加 perTickFunction() 声明
     void yzOneNI_recordOnePacket(int  sourceNIID, int dest_niID,int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) ;
-     float yzPacketPeriodSumQueueDelay = 0;
+     
     float yzPacketPeriodSumNetDelay = 0;
+    float yzPacketPeriodSumQueueDelay = 0;
     float yzPacketPeriodAvgQueueDelay = 0;
     float yzPacketPeriodAvgNetDelay = 0;
     int   yzPacketPeriodCount = 0;
+    
+    float yzPacketLastPeriodSumNetDelay = 0;
+    float yzPacketLastPeriodSumQueueDelay = 0;
+    int   yzPacketLastPeriodCount = 0;
+    int   yzPacketLastThreshold = 0;
+
     float yzActionFromPython = 0.5;
    
     
@@ -117,6 +128,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     int yzLast_ADNewPeriodtokenGenerated ;
 
     static float yz_shareActionAllNIs;
+    
     static float  yz_shareNICPURequestList[128]; // 64 个 NI 的 CPU 请求列表
     int yz_preCPUInjSignalCount = 0;
     int yz_curCPUInjSignalCount = 0;
@@ -126,6 +138,19 @@ class NetworkInterface : public ClockedObject, public Consumer
     static float yz_shareNoCTotalPacketCount;
 
     int tempThreshold = 0;
+
+    int thisNodeControledLastPeriod = 0;
+
+
+
+    
+    std::vector<double>
+    buildStateVector();
+
+
+
+   bool yzTestOnnxModel();
+   bool readRLModelInferenceTest() ;
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,

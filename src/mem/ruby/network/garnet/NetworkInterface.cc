@@ -70,8 +70,10 @@ NetworkInterface::NetworkInterface(const Params &p)
     m_stall_count.resize(m_virtual_networks);
     niOutVcs.resize(0);
    
+ 
+     yzTestOnnxModel();
+     readRLModelInferenceTest() ;
 
-   
 
 
  #ifdef yz250218RLReadFile
@@ -100,19 +102,180 @@ NetworkInterface::NetworkInterface(const Params &p)
    #endif
 }
 
+bool NetworkInterface::readRLModelInferenceTest() // 函数定义
+{
+    // --- 配置 ---
+    // !! 修改为您在容器内实际存放 ONNX 模型的路径 !!
+    const std::string onnx_model_path = "20250505.onnx"; // 假设在 gem5 运行目录下
+    const char* input_node_name = "input_state";     // 必须与导出时指定的名称一致
+    const char* output_node_name = "output_qvalues"; // 必须与导出时指定的名称一致
+    const size_t state_dim = 10; // 状态特征维度 (必须与模型匹配)
+    const size_t action_dim = 2; // 输出维度 (Q 值数量)
 
+    DPRINTF(yzzzzNI, "Attempting RL ONNX test: Load model '%s'\n", onnx_model_path);
 
+    try {
+        // --- 1. 初始化 ONNX Runtime 环境和会话 ---
+        // 注意: Env 和 Session 最好作为类成员变量在构造函数中初始化一次，以提高效率
+        // 但这里为了示例独立性，每次调用都重新创建。
+        Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "gem5_rl_onnx_env");
+        Ort::SessionOptions session_options;
+        session_options.SetIntraOpNumThreads(1);
+        session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_BASIC);
 
+        std::unique_ptr<Ort::Session> session;
+        
+        session = std::make_unique<Ort::Session>(env, onnx_model_path.c_str(), session_options);
+         
+        if (!session) {
+            std::cerr <<  "Error: Failed to create ONNX session for model "<<onnx_model_path << e.what() << std::endl;
+            
+             return false;
+        }
+        DPRINTF(yzzzzNI, "ONNX session created successfully.\n");
 
+        // --- 2. 准备固定的测试输入数据 ---
+        std::vector<float> input_tensor_values(state_dim);
+        // 用简单的递增值填充作为测试 (0.0, 0.1, 0.2, ...)
+        for(size_t i = 0; i < state_dim; ++i) {
+            input_tensor_values[i] = static_cast<float>(i) * 0.1f;
+        }
+        std::vector<int64_t> input_shape = {1, static_cast<int64_t>(state_dim)}; // Shape [1, 10]
 
+        // 打印部分输入值
+        DPRINTF(yzzzzNI, "Using fixed test input state (first 5 values): %.3f %.3f %.3f %.3f %.3f ...\n",
+                input_tensor_values[0], input_tensor_values[1], input_tensor_values[2], input_tensor_values[3], input_tensor_values[4]);
 
+        // 3. 创建输入张量
+        Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+        Ort::Value input_tensor = Ort::Value::CreateTensor<float>(memory_info,
+                                                                input_tensor_values.data(),
+                                                                input_tensor_values.size(),
+                                                                input_shape.data(),
+                                                                input_shape.size());
+        DPRINTF(yzzzzNI, "Input tensor created.\n");
 
+        // 4. 准备输入输出名称数组 (注意是 const char*)
+        std::vector<const char*> input_names = { input_node_name };
+        std::vector<const char*> output_names = { output_node_name };
+
+        // 5. 执行推理
+        DPRINTF(yzzzzNI, "Running ONNX inference...\n");
+        std::vector<Ort::Value> output_tensors = session->Run(Ort::RunOptions{nullptr},
+                                                            input_names.data(),
+                                                            &input_tensor,
+                                                            1, // Number of inputs
+                                                            output_names.data(),
+                                                            1); // Number of outputs
+        DPRINTF(yzzzzNI, "ONNX Inference completed.\n");
+
+        // 6. 处理输出
+        if (output_tensors.size() != 1 || !output_tensors[0].IsTensor()) {
+            DPRINTF(yzzzzNI, "Error: Inference did not return a valid tensor output.\n");
+            return false;
+        }
+
+        Ort::Value& output_tensor = output_tensors[0];
+        auto type_info = output_tensor.GetTensorTypeAndShapeInfo();
+        if (type_info.GetElementType() != ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT || type_info.GetElementCount() != action_dim) {
+             DPRINTF(yzzzzNI, "Error: Unexpected output tensor type (%d) or size (%lld). Expected %d floats.\n",
+                     type_info.GetElementType(), type_info.GetElementCount(), action_dim);
+             return false;
+        }
+
+        // 获取输出的 Q 值
+        const float* output_q_values_ptr = output_tensor.GetTensorData<float>();
+        float q_value_action0 = output_q_values_ptr[0]; // Q 值 for action 0 (Default)
+        float q_value_action1 = output_q_values_ptr[1]; // Q 值 for action 1 (AD)
+
+        // 根据 Q 值确定最佳动作
+        int predicted_action = (q_value_action1 >= q_value_action0) ? 1 : 0;
+
+        // 7. 使用 DPRINTF 打印结果
+       
+        std::cout<<"  yzzzzline q_value_action0, "<< q_value_action0<<" "<<q_value_action1<< " "<< predicted_action<<std::endl;
+        return true; // 表示测试成功
+
+    } catch (const Ort::Exception& e) {
+        DPRINTF(yzzzzNI, "ONNX Runtime Exception in RL test: %s\n", e.what());
+        return false;
+    } catch (const std::exception& e) {
+        DPRINTF(yzzzzNI, "Standard Exception in RL test: %s\n", e.what());
+        return false;
+    } catch (...) {
+         DPRINTF(yzzzzNI, "Unknown exception caught in RL ONNX test!\n");
+         return false;
+    }
+}
+ 
+bool NetworkInterface::yzTestOnnxModel() {
+    // 1. 固定输入
+    std::array<float,2> input_tensor_values = {0.6f, 0.2f};
+    std::array<int64_t,2> input_shape = {1,2};
+
+    try {
+        // 2. 初始化
+        Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "simple_neuron");
+        Ort::SessionOptions opts;
+        opts.SetIntraOpNumThreads(1);
+        opts.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_BASIC);
+
+        Ort::Session session(env, "linear_neuron.onnx", opts);
+
+        Ort::AllocatorWithDefaultOptions allocator;
+        // —— 注意这里用 GetInputNameAllocated/GetOutputNameAllocated ——  
+        Ort::AllocatedStringPtr in_name_ptr  = session.GetInputNameAllocated(0, allocator);
+        Ort::AllocatedStringPtr out_name_ptr = session.GetOutputNameAllocated(0, allocator);
+        const char* input_name  = in_name_ptr.get();
+        const char* output_name = out_name_ptr.get();
+
+        // 3. 构造输入 Ort::Value
+        Ort::MemoryInfo mem_info = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+        auto input_tensor = Ort::Value::CreateTensor<float>(
+            mem_info,
+            input_tensor_values.data(),
+            input_tensor_values.size(),
+            input_shape.data(),
+            input_shape.size()
+        );
+
+        // 4. 推理
+        std::array<const char*,1>  input_names  = {input_name};
+        std::array<const char*,1>  output_names = {output_name};
+        auto output_tensors = session.Run(
+            Ort::RunOptions{nullptr},
+            input_names.data(), &input_tensor, 1,
+            output_names.data(), 1
+        );
+
+        // 5. 读取输出
+        float result = output_tensors[0].GetTensorMutableData<float>()[0];
+        std::cout<<"  yzzzzline154 "<< input_tensor_values[0]<<" "<<input_tensor_values[1]<< " "<<result<<std::endl;
+        DPRINTF(yzzzzNI,
+            "Simple Neuron ONNX: x1=%.4f, x2=%.4f => y=%.4f\n",
+            input_tensor_values[0],
+            input_tensor_values[1],
+            result
+        );
+    }
+    catch (const Ort::Exception &e) {
+        std::cerr << "[ONNX Error] " << e.what() << std::endl;
+        return false;
+    }
+    catch (const std::exception &e) {
+        std::cerr << "[STD  Error] " << e.what() << std::endl;
+        return false;
+    }
+
+    return true;
+}
 
 
 
 
 
 float NetworkInterface::yz_shareActionAllNIs = 1.0f;
+ 
 float NetworkInterface::yz_shareNICPURequestList[128] = {0.0f};
 float NetworkInterface::yz_shareInjRateNoC = 0.0f;
 float NetworkInterface::yz_shareNoCTotalPacketCount = 0.0f;
@@ -121,7 +284,7 @@ void NetworkInterface::yzperTickFunction()
     // 1. 打开文件，写入当前 NI 的 Tick
      // 不管是不是第16个ni，都要执行下一次,重新调度下一次事件
      schedule(m_yztick_event, clockEdge(Cycles(yzResetTokenPeriod)));
-        
+        /*
      if (   newBashEnable == true )   {  //newBashEnable == true 一开始就启动。  //curTick()>  (get_max_tick() - 5*yzResetTokenPeriod*500) &&  newBashEnable == true  可以跑很多天但是一开始慢
         newBashEnable = false; // 防止重复执行
         if (m_id == 0) {
@@ -154,7 +317,7 @@ void NetworkInterface::yzperTickFunction()
             system(command.c_str());  // 运行 shell 命令
             }
         }
-
+    */
 
     // 更新已写入的 NI 数量
     totalWrittenNIs++;
@@ -193,13 +356,61 @@ void NetworkInterface::yzperTickFunction()
 }
 
 
+
+ 
+
+
+
+
+
+
+
+
+
 //yzkth
 void NetworkInterface::m_yzRecordSelfInjPacketFunction(){
     schedule(m_yzRecordSelfInjPacket, clockEdge(Cycles(yzResetTokenPeriod)));
 
     //tempThreshold = 73;
+
+
+int tempHighestInjRate = 0;
+int tempLowestInjRate =0;
+int avgInjCount = 0;
+for(int i = 0; i < 64; i++){
+    avgInjCount = avgInjCount + yz_shareNICPURequestList[m_id];
+    if (yz_shareNICPURequestList[m_id] > tempHighestInjRate){
+        tempHighestInjRate = yz_shareNICPURequestList[m_id];
+    }
+    if (yz_shareNICPURequestList[m_id] < tempLowestInjRate){
+        tempLowestInjRate = yz_shareNICPURequestList[m_id];
+    }
+}
+avgInjCount = avgInjCount / 64;
+ tempThreshold =  ((tempLowestInjRate + (tempHighestInjRate-tempLowestInjRate)*0.7));   
+
+
+NetworkInterface::yz_shareActionAllNIs= 0.4;  //1.2 for bodytrack
+if(thisNodeControledLastPeriod ==1){
+    thisNodeControledLastPeriod = 0;
+} 
+else{
+ if(avgInjCount > 140 && (yzPacketLastPeriodSumNetDelay/float(yzPacketLastPeriodCount) >  yzPacketLastPeriodSumNetDelay/float(yzPacketPeriodCount)*1.2) )
+ {
+ 
+  NetworkInterface::yz_shareActionAllNIs= 0.95;  //1.2 for bodytrack
+  thisNodeControledLastPeriod = 1;
+ }
+}
+ 
+    //yzReadAndStuckForPythonFIle(m_id); // 读取 Python 文件，等待 Python 更新 Tick
+    //DPRINTF(yzzzzNI, "stcuk ends line256 atTick %lld cycle %lld \n",curTick() ,curCycle() );
+    //yzReadAndStuckForPythonFIle(m_id); // 读取 Python 文件，等待 Python 更新 Tick
+    //DPRINTF(yzzzzNI, "stcuk ends line256 atTick %lld cycle %lld \n",curTick() ,curCycle() );
+//手动规则更新
+
 /*
-    //调控强度
+    //rl调控强度
     #ifdef yz250218RLReadFile
     if(yzPacketPeriodAvgQueueDelay > 10){
         NetworkInterface::yz_shareActionAllNIs= 1.0;
@@ -214,12 +425,12 @@ void NetworkInterface::m_yzRecordSelfInjPacketFunction(){
     }
      #endif
 */
-NetworkInterface::yz_shareActionAllNIs= 1.01;0.4; //1.2 for bodytrack
- 
 
     //./build/X86_MOESI_hammeryz1wVCBuffer/gem5.opt --debug-flags=yzzzzNI   -d m5out/250225/blacksholes/ configs/deprecated/example/fs.py     --checkpoint-restore=1  --checkpoint-dir=/home/yz/myprojects/2024GEM5/parsec-tests/yzmodifiedgem5/m5out/checkpoint/250224  --kernel=/home/yz/.cache/gem5/x86-linux-kernel-4.19.83 --disk=/home/yz/.cache/gem5/x86-parsec   --restore-with-cpu=AtomicSimpleCPU    --cpu-type=X86TimingSimpleCPU     --num-cpus=64   --ruby   --network=garnet   --topology=Mesh_XY   --mesh-rows=8 --num-dirs=64  --num-l2caches=64  --script=configs/yz2023Nov/large/yzfs_largeparsecblacksholes.script --abs-max-tick=334516476158500
  
-    if (yzPeriodActualInjPacketCount  >  tempThreshold  && curTick()==  (get_max_tick() - 19*yzResetTokenPeriod*500)  ) { //
+    //if (yzPeriodActualInjPacketCount  >  tempThreshold  && curTick()==  (get_max_tick() - 19*yzResetTokenPeriod*500)  ) //这是生成训练集的时候
+    if (yzPeriodActualInjPacketCount  >  tempThreshold    ) //这是测试有效性的时候
+    { //
         yz_InjRate = NetworkInterface::yz_shareActionAllNIs * float(yzPeriodActualInjPacketCount) / float(yzResetTokenPeriod) ;//调控，但是只调一个period
         //yz_InjRate = NetworkInterface::yz_shareActionAllNIs  * NetworkInterface::yz_shareNoCTotalPacketCount / float(yzResetTokenPeriod)  / float(64); //调控，但是只调一个period  而且全部节点统一
         if(NetworkInterface::yz_shareActionAllNIs > 0.98){
@@ -236,20 +447,7 @@ NetworkInterface::yz_shareActionAllNIs= 1.01;0.4; //1.2 for bodytrack
 
 
 
-    int tempHighestInjRate = 0;
-    int tempLowestInjRate =0;
 
-    for(int i = 0; i < 64; i++){
-   
-        if (yz_shareNICPURequestList[m_id] > tempHighestInjRate){
-            tempHighestInjRate = yz_shareNICPURequestList[m_id];
-        }
-        if (yz_shareNICPURequestList[m_id] < tempLowestInjRate){
-            tempLowestInjRate = yz_shareNICPURequestList[m_id];
-        }
-    }
-
-     tempThreshold =  ((tempLowestInjRate + (tempHighestInjRate-tempLowestInjRate)*0.7));   
 
      DPRINTF(yzzzzNI, "yzperTickFunction() AT %lu\n", curTick()); // 可選的調試信息
 
@@ -279,7 +477,9 @@ NetworkInterface::yz_shareActionAllNIs= 1.01;0.4; //1.2 for bodytrack
 
    // reset the record of each period state
    yzPacketPeriodSumQueueDelay = 0;
+   yzPacketLastPeriodSumNetDelay = yzPacketPeriodSumNetDelay;
    yzPacketPeriodSumNetDelay = 0;
+   yzPacketLastPeriodCount = yzPacketPeriodCount;
    yzPacketPeriodCount = 0;
    yzPacketPeriodAvgQueueDelay = 0;
    yzPacketPeriodAvgNetDelay = 0;
@@ -496,8 +696,10 @@ NetworkInterface::wakeup()
         yzCheckIniEvent = 1;    
         #ifdef  yzRecordActualInjRate       
         //yzkth
-        schedule(m_yztick_event, (get_max_tick() - 30*yzResetTokenPeriod*500)-1 ); // 首次调度事件. 解藕统计state和更新action.
-        schedule( m_yzRecordSelfInjPacket, (get_max_tick() - 30*yzResetTokenPeriod*500) ); // 首次调度事件    
+        //schedule(m_yztick_event, (get_max_tick() - 30*yzResetTokenPeriod*500)-1 ); // 首次调度事件. 解藕统计state和更新action. for training
+        //schedule( m_yzRecordSelfInjPacket, (get_max_tick() - 30*yzResetTokenPeriod*500) ); // 首次调度事件    for training 
+         schedule(m_yztick_event, (curTick()+20000000 )-1 ); // inference
+         schedule( m_yzRecordSelfInjPacket, (curTick()+20000000 ) ); // inference
         #endif
         
     }

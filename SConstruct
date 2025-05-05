@@ -191,6 +191,42 @@ main = Environment(tools=[
         'default', 'git', TempFileSpawn, EnvDefaults, MakeActionTool,
         ConfigFile, AddLocalRPATH, SwitchingHeaders, TagImpliesTool, Blob
     ])
+########################################################################
+#
+# Set up thelibtorch environment.
+#
+########################################################################
+ # 1. 定义 ONNX Runtime 的根目录 (您解压/放置的最终路径)
+onnxruntime_root = "/opt/libtorch/onnx" # <--- 确认这是包含 include/ 和 lib/ 的路径
+
+# 2. 添加 Include 和 Lib 路径
+main.Append(
+    CPPPATH=[
+        os.path.join(onnxruntime_root, "include"),
+        # ... 其他 gem5 需要的 include 路径 ...
+    ],
+    LIBPATH=[
+        os.path.join(onnxruntime_root, "lib"),
+        # ... 其他 gem5 需要的 lib 路径 ...
+    ],
+    LIBS=[
+        'onnxruntime', # ONNX Runtime 主库 (检查 lib 目录下实际名称，通常是这个)
+        # 移除 'torch', 'c10', 'torch_cpu' 等 libtorch 的库
+        # 可能仍然需要 protobuf 和 zlib (根据 gem5 自身或 ONNX Runtime 的需要)
+        'protobuf',
+        'z',
+        # 添加 ONNX Runtime 可能需要的其他依赖库（通常 pthread, dl 会自动处理）
+    ],
+    LINKFLAGS=[
+        # 添加 RPATH 让运行时能找到 onnxruntime.so
+        "-Wl,-rpath," + os.path.join(onnxruntime_root, "lib"),
+        "-pthread",
+        # 移除 libtorch 的 RPATH
+        # ... 其他链接标志 ...
+    ],
+)
+
+
 
 main.Tool(SCons.Tool.FindTool(['gcc', 'clang'], main))
 main.Tool(SCons.Tool.FindTool(['g++', 'clang++'], main))

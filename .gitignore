@@ -52,3 +52,9 @@ src/yzPythonCode/.idea/inspectionProfiles/profiles_settings.xml
 src/yzPythonCode/.idea/misc.xml
 
 src/yzPythonCode/.idea/vcs.xml
+
+*.onnx
+
+disks/
+
+binaries/
