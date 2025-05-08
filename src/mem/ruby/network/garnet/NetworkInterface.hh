@@ -95,17 +95,33 @@ class NetworkInterface : public ClockedObject, public Consumer
     EventFunctionWrapper m_yztick_event,m_yzRecordSelfInjPacket; // 添加事件成员
     void yzperTickFunction();           // 添加 perTickFunction() 声明
     void yzOneNI_recordOnePacket(int  sourceNIID, int dest_niID,int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) ;
-     
-    float yzPacketPeriodSumNetDelay = 0;
-    float yzPacketPeriodSumQueueDelay = 0;
+    
+   
+
+
+    int yzPeriodLastActualInjPacketCount = 0;
+    float yzLastPacketPeriodAvgQueueDelay = 0;
+    float yzLastPacketPeriodAvgNetDelay = 0;
+    int   yzLastPacketPeriodCount = 0;
+
+    
+    
+
+    int yzPeriodActualInjPacketCount = 0;
     float yzPacketPeriodAvgQueueDelay = 0;
     float yzPacketPeriodAvgNetDelay = 0;
     int   yzPacketPeriodCount = 0;
-    
+   
+
+
+
     float yzPacketLastPeriodSumNetDelay = 0;
     float yzPacketLastPeriodSumQueueDelay = 0;
-    int   yzPacketLastPeriodCount = 0;
+    float yzPacketPeriodSumQueueDelay = 0;
+    float yzPacketPeriodSumNetDelay = 0;
     int   yzPacketLastThreshold = 0;
+    int tempThreshold = 0;
+
 
     float yzActionFromPython = 0.5;
    
@@ -115,7 +131,7 @@ class NetworkInterface : public ClockedObject, public Consumer
     Tick pythonReadTick = 0;
  
 
-    int yzPeriodActualInjPacketCount = 0;
+    
     void  m_yzRecordSelfInjPacketFunction();
 
     const int yzResetTokenPeriod = 20000; // 重置 Token 的周期, clock cycle rather than ticks
@@ -129,6 +145,18 @@ class NetworkInterface : public ClockedObject, public Consumer
 
     static float yz_shareActionAllNIs;
     
+   static int  yzstate0_lastInj  ;
+   static  float yzstate1_lastRec ;
+   static  float yzstate2_lastQueudelay  ;
+   static int    yzstate3_lastNetDelay  ;
+   static int  yzstate4_curInj  ;
+   static float yzstate5_curRec  ;
+   static  float yzstate6_curQueudelay  ;
+   static  int   yzstate7_curNetDelay  ;
+
+
+
+
     static float  yz_shareNICPURequestList[128]; // 64 个 NI 的 CPU 请求列表
     int yz_preCPUInjSignalCount = 0;
     int yz_curCPUInjSignalCount = 0;
@@ -137,20 +165,18 @@ class NetworkInterface : public ClockedObject, public Consumer
     static float yz_shareInjRateNoC;
     static float yz_shareNoCTotalPacketCount;
 
-    int tempThreshold = 0;
+    
 
     int thisNodeControledLastPeriod = 0;
 
 
 
     
-    std::vector<double>
-    buildStateVector();
 
 
 
    bool yzTestOnnxModel();
-   bool readRLModelInferenceTest() ;
+   bool readRLModelInferenceTest( ) ;
 
     void addInPort(NetworkLink *in_link, CreditLink *credit_link);
     void addOutPort(NetworkLink *out_link, CreditLink *credit_link,
