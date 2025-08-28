@@ -118,6 +118,13 @@ parser.add_argument(
                         Set to -1 to inject randomly in all vnets.",
 )
 
+parser.add_argument(
+    "--enable-dvfs",
+    action="store_true",
+    default=False,
+    help="Enable periodic DVFS switching on routers for testing",
+)
+
 #
 # Add the ruby specific and protocol specific options
 #
@@ -158,6 +165,20 @@ Ruby.create_system(args, False, system)
 system.ruby.clk_domain = SrcClockDomain(
     clock=args.ruby_clock, voltage_domain=system.voltage_domain
 )
+
+# Configure DVFS if requested
+if args.enable_dvfs:
+    print("DVFS enabled: Configuring periodic DVFS switching on routers")
+    # Configure DVFS on each router
+    for router in system.ruby.network.routers:
+        router.dvfs_enable_periodic = True
+        # Optional: Override default DVFS settings for faster testing
+        # router.dvfs_switch_interval = 500000  # Switch every 500K ticks
+else:
+    print("DVFS disabled: Routers will run at fixed frequency")
+    # Ensure DVFS is disabled on all routers (default is already False)
+    for router in system.ruby.network.routers:
+        router.dvfs_enable_periodic = False
 
 i = 0
 for ruby_port in system.ruby._cpu_ports:

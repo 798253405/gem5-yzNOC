@@ -92,4 +92,4 @@ class GarnetRouter(BasicRouter):
     dvfs_low_voltage = Param.Float(0.8, "Low DVFS voltage in V")
     dvfs_medium_voltage = Param.Float(1.0, "Medium DVFS voltage in V")
     dvfs_high_voltage = Param.Float(1.2, "High DVFS voltage in V")
-    dvfs_enable_periodic = Param.Bool(True, "Enable periodic DVFS switching for testing")
+    dvfs_enable_periodic = Param.Bool(False, "Enable periodic DVFS switching for testing")
