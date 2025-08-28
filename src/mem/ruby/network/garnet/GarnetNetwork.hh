@@ -189,6 +189,14 @@ class GarnetNetwork : public Network
 
     void update_traffic_distribution(RouteInfo route);
     int getNextPacketID() { return m_next_packet_id++; }
+ std::vector<NetworkInterface *> m_nis;   // All NI's in Network // yz make it public 2025 0529
+  statistics::Vector m_packets_received; //  // yz make it public 2025 0529
+    statistics::Vector m_packets_injected;
+     statistics::Vector m_flits_received;
+    statistics::Vector m_flits_injected;
+
+    
+
 
   protected:
     // Configuration
@@ -202,8 +210,7 @@ class GarnetNetwork : public Network
     bool m_enable_fault_model;
 
     // Statistical variables
-    statistics::Vector m_packets_received;
-    statistics::Vector m_packets_injected;
+  
     statistics::Vector m_packet_network_latency;
     statistics::Vector m_packet_queueing_latency;
     statistics::Vector yz_packets_injectedVnet0;
@@ -220,8 +227,7 @@ class GarnetNetwork : public Network
     statistics::Formula m_avg_packet_queueing_latency;
     statistics::Formula m_avg_packet_latency;
 
-    statistics::Vector m_flits_received;
-    statistics::Vector m_flits_injected;
+   
     statistics::Vector m_flit_network_latency;
     statistics::Vector m_flit_queueing_latency;
 
@@ -243,6 +249,8 @@ class GarnetNetwork : public Network
     std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
 
+
+   
   private:
     GarnetNetwork(const GarnetNetwork& obj);
     GarnetNetwork& operator=(const GarnetNetwork& obj);
@@ -252,7 +260,7 @@ class GarnetNetwork : public Network
     std::vector<NetworkLink *> m_networklinks; // All flit links in the network
     std::vector<NetworkBridge *> m_networkbridges; // All network bridges
     std::vector<CreditLink *> m_creditlinks; // All credit links in the network
-    std::vector<NetworkInterface *> m_nis;   // All NI's in Network
+    
     int m_next_packet_id; // static vairable for packet id allocation
 };
 

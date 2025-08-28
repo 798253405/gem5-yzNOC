@@ -1,0 +1,1 @@
+   echo “no ckpt now” ;cd /home/gem5/parsec-benchmark; source env.sh; parsecmgmt -a run -p ferret  -c gcc-hooks -i simlarge  -n 64;   m5 exit; 

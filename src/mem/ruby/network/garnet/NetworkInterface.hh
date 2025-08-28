@@ -91,12 +91,11 @@ class NetworkInterface : public ClockedObject, public Consumer
     int yz_ADtokenUsed = 0;
     int yz_ADtokenWasted = 0;
     double yz_tokenInBucket = 0;
-    float yz_InjRate = 1.0999;
-    EventFunctionWrapper m_yztick_event,m_yzRecordSelfInjPacket; // 添加事件成员
+    float yz_InjRateForFuture = 1.0999;
+    // EventFunctionWrapper m_yzfirsttick_event,m_yzsecondRControlEachNI,yz_forthresetPeriod,yz_thirdwriteFiles; // 添加事件成员
     void yzperTickFunction();           // 添加 perTickFunction() 声明
     void yzOneNI_recordOnePacket(int  sourceNIID, int dest_niID,int recvNIID  , int onWhichVNet,float in_queueing_delay,  float in_network_delay) ;
-    
-   
+    static  bool yzResetandWriteFileFlag;
 
 
     int yzPeriodLastActualInjPacketCount = 0;
@@ -132,40 +131,47 @@ class NetworkInterface : public ClockedObject, public Consumer
  
 
     
-    void  m_yzRecordSelfInjPacketFunction();
+    void  m_yzsecondRControlEachNIFunction();
+    void yz_forthresetPeriodFunction();
+    void yz_thirdwriteFilesFunction();
+
 
     const int yzResetTokenPeriod = 20000; // 重置 Token 的周期, clock cycle rather than ticks
     void yzWritePeriodStateFile(int in_m_id);
     void yzReadAndStuckForPythonFIle(int in_m_id);
     long long yzLastPeriodCycleForTokenGen = 0;
      int yz_ADNewPeriodtokenGenerated;
-    void  yzResetBucketPeriod();
+    
     int yzCheckIniEvent = 0;
     int yzLast_ADNewPeriodtokenGenerated ;
 
     static float yz_shareActionAllNIs;
     
    static int  yzstate0_lastInj  ;
-   static  float yzstate1_lastRec ;
-   static  float yzstate2_lastQueudelay  ;
+   static  double yzstate1_lastRec ;
+   static  double yzstate2_lastQueudelay  ;
    static int    yzstate3_lastNetDelay  ;
    static int  yzstate4_curInj  ;
-   static float yzstate5_curRec  ;
-   static  float yzstate6_curQueudelay  ;
+   static double yzstate5_curRec  ;
+   static  double yzstate6_curQueudelay  ;
    static  int   yzstate7_curNetDelay  ;
 
+   static int  yzstate8_minus2Inj  ;
+   static double  yzstate9_minus2Rec  ;
+   static double  yzstate10_minus2Queudelay  ;
+   static int   yzstate11_minus2NetDelay ;
 
 
-
-    static float  yz_shareNICPURequestList[128]; // 64 个 NI 的 CPU 请求列表
-    int yz_preCPUInjSignalCount = 0;
-    int yz_curCPUInjSignalCount = 0;
+    static int yz_shareNICPURequestList[128]; // 64 个 NI 的 CPU 请求列表
+ 
 
     bool newBashEnable = true;
     static float yz_shareInjRateNoC;
     static float yz_shareNoCTotalPacketCount;
 
-    
+    double q_pred; 
+    double n_pred; // 预测的 net_delay
+
 
     int thisNodeControledLastPeriod = 0;
 
@@ -379,9 +385,9 @@ class NetworkInterface : public ClockedObject, public Consumer
           uint32_t _bitWidth;
     };
 
-
+ GarnetNetwork *m_net_ptr;
   private:
-    GarnetNetwork *m_net_ptr;
+   
     const NodeID m_id;
     const int m_virtual_networks;
     int m_vc_per_vnet;

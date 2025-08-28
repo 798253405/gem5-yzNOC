@@ -146,6 +146,8 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
         return true;
 
       case M5OP_EXIT:
+      // warn("[YZ] Detected m5_work_inst 149 now is M5OP_EXIT %llu\n", curTick());
+      std::cout<<" pseudo inst 149 now is M5OP_EXIT"<<curTick() <<std::endl;
         invokeSimcall<ABI>(tc, m5exit);
         return true;
 
@@ -206,6 +208,9 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
         panic("M5 panic instruction called at %s\n", tc->pcState());
 
       case M5OP_WORK_BEGIN:
+    //   warn("[YZ] Detected m5_work_begin at tick %llu\n", curTick());
+      std::cout<<" pseudo inst212 now is work begin and yzzz ckpt "<<curTick() <<std::endl;
+      invokeSimcall<ABI>(tc, m5checkpoint); //yzzzz work beginand ckpt
         invokeSimcall<ABI>(tc, workbegin);
         return true;
 
