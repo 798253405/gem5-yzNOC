@@ -33,6 +33,7 @@
 #include "mem/ruby/network/garnet/Router.hh"
 
 #include "debug/RubyNetwork.hh"
+#include "sim/clock_domain.hh"
 #include "mem/ruby/network/garnet/CreditLink.hh"
 #include "mem/ruby/network/garnet/GarnetNetwork.hh"
 #include "mem/ruby/network/garnet/InputUnit.hh"
@@ -53,7 +54,12 @@ Router::Router(const Params &p)
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
     m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
     m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
-    crossbarSwitch(this)
+    crossbarSwitch(this), m_current_dvfs_level(DVFS_MEDIUM),
+    m_dvfs_update_event([this]{ periodicDVFSUpdate(); }, name()),
+    m_dvfs_switch_interval(p.dvfs_switch_interval),
+    m_dvfs_cycle_counter(0), m_dvfs_enable_periodic(p.dvfs_enable_periodic),
+    m_dvfs_freq{p.dvfs_low_freq_mhz, p.dvfs_medium_freq_mhz, p.dvfs_high_freq_mhz},
+    m_dvfs_voltage{p.dvfs_low_voltage, p.dvfs_medium_voltage, p.dvfs_high_voltage}
 {
     m_input_unit.clear();
     m_output_unit.clear();
@@ -66,6 +72,14 @@ Router::init()
 
     switchAllocator.init();
     crossbarSwitch.init();
+    
+    // Initialize DVFS - start with medium level and schedule first switch if enabled
+    setDVFSLevel(DVFS_MEDIUM);
+    if (m_dvfs_enable_periodic) {
+        schedule(m_dvfs_update_event, curTick() + m_dvfs_switch_interval);
+        DPRINTF(RubyNetwork, "Router %d DVFS periodic switching enabled, interval=%lld ticks\n", 
+                m_id, m_dvfs_switch_interval);
+    }
 }
 
 void
@@ -309,6 +323,71 @@ Router::functionalWrite(Packet *pkt)
     }
 
     return num_functional_writes;
+}
+
+void
+Router::setDVFSLevel(DVFSLevel level)
+{
+    DPRINTF(RubyNetwork, "Router %d switching to DVFS level %d\n", m_id, level);
+    
+    m_current_dvfs_level = level;
+    
+    // Get frequency/voltage levels from configuration parameters
+    double frequency_mhz = m_dvfs_freq[level];
+    double voltage_v = m_dvfs_voltage[level];
+    
+    // Calculate clock period in ticks (gem5 uses ticks per second = 1e12)
+    Tick clock_period = (Tick)(1e12 / (frequency_mhz * 1e6)); // Convert MHz to ticks
+    
+    // For now, we log the DVFS change (actual clock domain switching requires DVFS handler)
+    // Future implementation can use DVFSHandler for real frequency/voltage switching
+    DPRINTF(RubyNetwork, "Router %d DVFS change: freq=%.1fMHz (period=%lld), voltage=%.1fV\n", 
+            m_id, frequency_mhz, clock_period, voltage_v);
+            
+    // TODO: Integrate with DVFSHandler for actual clock domain switching
+    // This would require:
+    // 1. Router to be associated with a switchable clock domain
+    // 2. Use DVFSHandler::perfLevel() to change frequency/voltage
+    // For testing purposes, we simulate the behavior with logging
+}
+
+void
+Router::triggerDVFSChange(DVFSLevel level)
+{
+    // Interface for future network-aware DVFS control
+    // This can be called by network monitoring logic
+    DPRINTF(RubyNetwork, "Router %d triggered DVFS change to level %d\n", m_id, level);
+    setDVFSLevel(level);
+}
+
+void
+Router::periodicDVFSUpdate()
+{
+    // Cycle through DVFS levels for testing: LOW -> MEDIUM -> HIGH -> LOW ...
+    DVFSLevel next_level;
+    
+    switch (m_current_dvfs_level) {
+        case DVFS_LOW:
+            next_level = DVFS_MEDIUM;
+            break;
+        case DVFS_MEDIUM:
+            next_level = DVFS_HIGH;
+            break;
+        case DVFS_HIGH:
+            next_level = DVFS_LOW;
+            break;
+    }
+    
+    setDVFSLevel(next_level);
+    m_dvfs_cycle_counter++;
+    
+    DPRINTF(RubyNetwork, "Router %d periodic DVFS update #%d: %d -> %d\n", 
+            m_id, m_dvfs_cycle_counter, m_current_dvfs_level, next_level);
+    
+    // Schedule next periodic update if enabled
+    if (m_dvfs_enable_periodic) {
+        schedule(m_dvfs_update_event, curTick() + m_dvfs_switch_interval);
+    }
 }
 
 } // namespace garnet

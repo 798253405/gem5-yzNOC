@@ -46,6 +46,7 @@
 #include "mem/ruby/network/garnet/SwitchAllocator.hh"
 #include "mem/ruby/network/garnet/flit.hh"
 #include "params/GarnetRouter.hh"
+#include "sim/dvfs_handler.hh"
 
 namespace gem5
 {
@@ -142,6 +143,18 @@ class Router : public BasicRouter, public Consumer
     bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *);
 
+    // DVFS related functions
+    enum DVFSLevel {
+        DVFS_LOW = 0,    // Low voltage/frequency for power saving
+        DVFS_MEDIUM = 1, // Default/medium voltage/frequency
+        DVFS_HIGH = 2    // High voltage/frequency for high performance
+    };
+    
+    void setDVFSLevel(DVFSLevel level);
+    DVFSLevel getCurrentDVFSLevel() const { return m_current_dvfs_level; }
+    void triggerDVFSChange(DVFSLevel level); // Interface for future network-aware DVFS
+    void periodicDVFSUpdate(); // Periodic DVFS switching for testing
+
   private:
     Cycles m_latency;
     uint32_t m_virtual_networks, m_vc_per_vnet, m_num_vcs;
@@ -163,6 +176,15 @@ class Router : public BasicRouter, public Consumer
     statistics::Scalar m_sw_output_arbiter_activity;
 
     statistics::Scalar m_crossbar_activity;
+
+    // DVFS related variables
+    DVFSLevel m_current_dvfs_level;
+    EventFunctionWrapper m_dvfs_update_event;
+    Tick m_dvfs_switch_interval; // Interval for periodic DVFS switching
+    uint32_t m_dvfs_cycle_counter; // Counter for cycling through DVFS levels
+    bool m_dvfs_enable_periodic; // Enable periodic DVFS switching
+    double m_dvfs_freq[3]; // Frequency levels for LOW/MEDIUM/HIGH
+    double m_dvfs_voltage[3]; // Voltage levels for LOW/MEDIUM/HIGH
 };
 
 } // namespace garnet

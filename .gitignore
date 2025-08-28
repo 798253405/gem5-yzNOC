@@ -58,3 +58,5 @@ src/yzPythonCode/.idea/vcs.xml
 disks/
 
 binaries/
+
+dvfs_output.log
