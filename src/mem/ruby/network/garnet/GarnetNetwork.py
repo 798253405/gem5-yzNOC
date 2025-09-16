@@ -86,10 +86,11 @@ class GarnetRouter(BasicRouter):
     
     # DVFS configuration parameters
     dvfs_switch_interval = Param.Tick(1000000, "Interval for periodic DVFS switching (ticks)")
-    dvfs_low_freq_mhz = Param.Float(800.0, "Low DVFS frequency in MHz")
-    dvfs_medium_freq_mhz = Param.Float(1200.0, "Medium DVFS frequency in MHz") 
-    dvfs_high_freq_mhz = Param.Float(1600.0, "High DVFS frequency in MHz")
+    dvfs_low_freq_mhz = Param.Float(1000.0, "Low DVFS frequency in MHz")     # 1GHz
+    dvfs_medium_freq_mhz = Param.Float(2000.0, "Medium DVFS frequency in MHz") # 2GHz (default)
+    dvfs_high_freq_mhz = Param.Float(4000.0, "High DVFS frequency in MHz")    # 4GHz
     dvfs_low_voltage = Param.Float(0.8, "Low DVFS voltage in V")
     dvfs_medium_voltage = Param.Float(1.0, "Medium DVFS voltage in V")
     dvfs_high_voltage = Param.Float(1.2, "High DVFS voltage in V")
     dvfs_enable_periodic = Param.Bool(False, "Enable periodic DVFS switching for testing")
+    dvfs_mode = Param.String("high", "DVFS mode: low, medium, high, or cycle")

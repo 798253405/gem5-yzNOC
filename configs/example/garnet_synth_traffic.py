@@ -125,6 +125,14 @@ parser.add_argument(
     help="Enable periodic DVFS switching on routers for testing",
 )
 
+parser.add_argument(
+    "--dvfs-mode",
+    type=str,
+    default="high",
+    choices=["low", "medium", "high", "cycle"],
+    help="DVFS mode: low(1GHz), medium(2GHz), high(4GHz), or cycle through all",
+)
+
 #
 # Add the ruby specific and protocol specific options
 #
@@ -168,14 +176,45 @@ system.ruby.clk_domain = SrcClockDomain(
 
 # Configure DVFS if requested
 if args.enable_dvfs:
-    print("DVFS enabled: Configuring periodic DVFS switching on routers")
-    # Configure DVFS on each router
-    for router in system.ruby.network.routers:
-        router.dvfs_enable_periodic = True
+    print(f"DVFS enabled: Mode = {args.dvfs_mode}")
+    
+    # Create independent SrcClockDomain for each router to enable DVFS
+    for i, router in enumerate(system.ruby.network.routers):
+        # Create a dedicated clock domain for this router with multiple performance levels
+        # Performance levels (index 0 is highest performance):
+        # Level 0: 4GHz = 250ps
+        # Level 1: 2GHz = 500ps (default)
+        # Level 2: 1GHz = 1000ps
+        router_clk = SrcClockDomain(
+            clock=['250ps', '500ps', '1000ps'],  # List of clock periods for different perf levels
+            voltage_domain=system.voltage_domain,
+            domain_id=100 + i,  # Unique domain ID for each router (avoid conflicts)
+            init_perf_level=1  # Start at medium performance (index 1 = 2GHz)
+        )
+        
+        # Assign the clock domain to the router
+        router.clk_domain = router_clk
+        
+        # Set DVFS mode
+        router.dvfs_mode = args.dvfs_mode
+        
+        # Enable periodic DVFS switching only in cycle mode
+        if args.dvfs_mode == "cycle":
+            router.dvfs_enable_periodic = True
+        else:
+            router.dvfs_enable_periodic = False  # Fixed frequency mode
+            
+        # Override frequencies to match clock domain periods
+        router.dvfs_high_freq_mhz = 4000.0   # 250ps
+        router.dvfs_medium_freq_mhz = 2000.0  # 500ps (default)
+        router.dvfs_low_freq_mhz = 1000.0    # 1000ps
+        
         # Optional: Override default DVFS settings for faster testing
         # router.dvfs_switch_interval = 500000  # Switch every 500K ticks
+        
+    print(f"Created {len(system.ruby.network.routers)} independent router clock domains with DVFS mode: {args.dvfs_mode}")
 else:
-    print("DVFS disabled: Routers will run at fixed frequency")
+    print("DVFS disabled: Routers will run at fixed 2GHz frequency")
     # Ensure DVFS is disabled on all routers (default is already False)
     for router in system.ruby.network.routers:
         router.dvfs_enable_periodic = False

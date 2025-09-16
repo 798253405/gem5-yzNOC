@@ -83,7 +83,7 @@ class Router : public BasicRouter, public Consumer
                     int link_weight, CreditLink *credit_link,
                     uint32_t consumerVcs);
 
-    Cycles get_pipe_stages(){ return m_latency; }
+    Cycles get_pipe_stages(){ return getEffectiveLatency(); }
     uint32_t get_num_vcs()       { return m_num_vcs; }
     uint32_t get_num_vnets()     { return m_virtual_networks; }
     uint32_t get_vc_per_vnet()   { return m_vc_per_vnet; }
@@ -154,6 +154,12 @@ class Router : public BasicRouter, public Consumer
     DVFSLevel getCurrentDVFSLevel() const { return m_current_dvfs_level; }
     void triggerDVFSChange(DVFSLevel level); // Interface for future network-aware DVFS
     void periodicDVFSUpdate(); // Periodic DVFS switching for testing
+    
+    // Override ClockedObject hook for clock period updates
+    void clockPeriodUpdated() override;
+    
+    // Get effective latency with DVFS scaling applied
+    Cycles getEffectiveLatency() const;
 
   private:
     Cycles m_latency;
@@ -176,6 +182,11 @@ class Router : public BasicRouter, public Consumer
     statistics::Scalar m_sw_output_arbiter_activity;
 
     statistics::Scalar m_crossbar_activity;
+    
+    // DVFS statistics
+    statistics::Scalar m_dvfs_freq_mhz;
+    statistics::Scalar m_dvfs_scale_factor;
+    statistics::Scalar m_dvfs_effective_latency;
 
     // DVFS related variables
     DVFSLevel m_current_dvfs_level;
@@ -185,6 +196,8 @@ class Router : public BasicRouter, public Consumer
     bool m_dvfs_enable_periodic; // Enable periodic DVFS switching
     double m_dvfs_freq[3]; // Frequency levels for LOW/MEDIUM/HIGH
     double m_dvfs_voltage[3]; // Voltage levels for LOW/MEDIUM/HIGH
+    double m_freq_scale_factor; // Current frequency scaling factor (1.0 = medium freq)
+    std::string m_dvfs_mode; // DVFS mode: low, medium, high, or cycle
 };
 
 } // namespace garnet
